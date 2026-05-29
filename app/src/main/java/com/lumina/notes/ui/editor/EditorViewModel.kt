@@ -1,5 +1,6 @@
 package com.lumina.notes.ui.editor
 
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lumina.notes.data.ink.InkSerializer
@@ -11,7 +12,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.snapshotFlow
 import kotlinx.coroutines.launch
 
 class EditorViewModel(

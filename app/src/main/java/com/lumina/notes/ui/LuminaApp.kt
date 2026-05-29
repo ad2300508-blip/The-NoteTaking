@@ -75,12 +75,16 @@ fun LuminaApp(settings: AppSettings, quickNote: Boolean = false) {
 
     Surface(color = MaterialTheme.colorScheme.background) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
-            val twoPane = maxWidth >= 840.dp
+            // Capture into locals so they're usable inside nested lambdas
+            // (Row/AnimatedContent) where the BoxWithConstraints receiver
+            // is no longer the implicit one.
+            val widthDp = maxWidth
+            val twoPane = widthDp >= 840.dp
             val selectedId = (detail as? Detail.Note)?.id
 
             if (twoPane) {
                 Row(Modifier.fillMaxSize()) {
-                    Box(Modifier.width(if (maxWidth >= 1240.dp) 420.dp else 360.dp)) {
+                    Box(Modifier.width(if (widthDp >= 1240.dp) 420.dp else 360.dp)) {
                         NotesListScreen(
                             viewModel = notesVm,
                             selectedNoteId = selectedId,
@@ -119,7 +123,7 @@ fun LuminaApp(settings: AppSettings, quickNote: Boolean = false) {
                             selectedNoteId = null,
                             onOpenNote = { detail = Detail.Note(it) },
                             onOpenSettings = { detail = Detail.Settings },
-                            columns = if (maxWidth >= 600.dp) 2 else 1,
+                            columns = if (widthDp >= 600.dp) 2 else 1,
                         )
                         else -> {
                             BackHandler { detail = Detail.None }

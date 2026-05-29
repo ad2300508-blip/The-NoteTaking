@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
-import androidx.compose.material.icons.outlined.PushPin as PushPinOutlined
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -110,7 +109,7 @@ fun EditorScreen(
             actions = {
                 IconButton(onClick = viewModel::togglePin) {
                     Icon(
-                        if (isPinned) Icons.Filled.PushPin else PushPinOutlined,
+                        Icons.Filled.PushPin,
                         contentDescription = "Fissa",
                         tint = if (isPinned) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant,

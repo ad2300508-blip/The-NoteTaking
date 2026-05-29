@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
@@ -46,6 +47,7 @@ import com.lumina.notes.data.ink.StrokePoint
  * changes), while the in-progress stroke is drawn on a lightweight overlay
  * every frame. This keeps drawing smooth even on dense, multi-page notes.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun InkCanvas(
     controller: InkController,
