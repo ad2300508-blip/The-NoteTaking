@@ -33,7 +33,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.lumina.notes.data.ink.PenTool
 import com.lumina.notes.ui.ink.InkController
@@ -44,6 +45,9 @@ fun InkToolbar(
     controller: InkController,
     modifier: Modifier = Modifier,
 ) {
+    val haptics = LocalHapticFeedback.current
+    fun tap() = haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(24.dp),
@@ -53,13 +57,13 @@ fun InkToolbar(
         Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ToolButton(Icons.Filled.Edit, "Penna", controller.tool == PenTool.PEN) {
-                    controller.selectTool(PenTool.PEN)
+                    tap(); controller.selectTool(PenTool.PEN)
                 }
                 ToolButton(Icons.Filled.Highlight, "Evidenziatore", controller.tool == PenTool.HIGHLIGHTER) {
-                    controller.selectTool(PenTool.HIGHLIGHTER)
+                    tap(); controller.selectTool(PenTool.HIGHLIGHTER)
                 }
                 ToolButton(Icons.Filled.Brush, "Gomma", controller.tool == PenTool.ERASER) {
-                    controller.selectTool(PenTool.ERASER)
+                    tap(); controller.selectTool(PenTool.ERASER)
                 }
 
                 Spacer(Modifier.width(8.dp))
@@ -157,7 +161,6 @@ private fun ColorSwatch(color: Color, selected: Boolean, onClick: () -> Unit) {
     Box(
         Modifier
             .size(if (selected) 30.dp else 26.dp)
-            .graphicsLayer { }
             .background(color, CircleShape)
             .border(
                 width = if (selected) 3.dp else 1.dp,

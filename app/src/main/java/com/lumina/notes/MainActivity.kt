@@ -1,5 +1,6 @@
 package com.lumina.notes
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,6 +20,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val container = (application as LuminaApplication).container
+        val quickNote = isQuickNoteIntent(intent)
 
         setContent {
             val settings by container.settingsRepository.settings
@@ -26,8 +28,12 @@ class MainActivity : ComponentActivity() {
             val dark = settings.darkTheme ?: isSystemInDarkTheme()
 
             LuminaTheme(darkTheme = dark, dynamicColor = settings.dynamicColor) {
-                LuminaApp(settings = settings)
+                LuminaApp(settings = settings, quickNote = quickNote)
             }
         }
     }
+
+    /** True when launched from the S Pen Air Command "Create note" action. */
+    private fun isQuickNoteIntent(intent: Intent?): Boolean =
+        intent?.action == "android.intent.action.CREATE_NOTE"
 }

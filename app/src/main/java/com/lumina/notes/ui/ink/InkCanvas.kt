@@ -3,24 +3,32 @@ package com.lumina.notes.ui.ink
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Canvas as GraphicsCanvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke as StrokeStyle
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.lumina.notes.data.ink.PenTool
 import com.lumina.notes.data.ink.Stroke
@@ -31,6 +39,11 @@ import com.lumina.notes.data.ink.StrokePoint
  * [PointerType] from the input stream so the S Pen draws pressure-tapered
  * lines, the side button erases, and (with palm rejection) a resting hand is
  * ignored while the pen is in use.
+ *
+ * Rendering is layered for fluidity: already-committed strokes are rasterized
+ * once into a cached [ImageBitmap] (rebuilt only when the ink actually
+ * changes), while the in-progress stroke is drawn on a lightweight overlay
+ * every frame. This keeps drawing smooth even on dense, multi-page notes.
  */
 @Composable
 fun InkCanvas(
@@ -41,67 +54,92 @@ fun InkCanvas(
     var liveStroke by remember { mutableStateOf<List<StrokePoint>>(emptyList()) }
     var liveTool by remember { mutableStateOf(PenTool.PEN) }
     val eraserRadius = with(LocalDensity.current) { 16.dp.toPx() }
+    val haptics = LocalHapticFeedback.current
 
-    Canvas(
-        modifier = modifier.pointerInput(controller, palmRejection) {
-            awaitEachGesture {
-                val down = awaitFirstDown(requireUnconsumed = false)
-
-                // Palm rejection: while drawing with the pen, ignore finger touches.
-                if (palmRejection && down.type == PointerType.Touch) return@awaitEachGesture
-
-                val erasing = controller.tool == PenTool.ERASER || down.type == PointerType.Eraser
-                val drawTool = if (down.type == PointerType.Eraser) PenTool.ERASER else controller.tool
-                val points = ArrayList<StrokePoint>()
-
-                fun handle(change: PointerInputChange) {
-                    if (erasing) {
-                        // Use historical samples too so fast erases don't skip.
-                        change.historical.forEach {
-                            controller.eraseAt(it.position.x, it.position.y, eraserRadius)
-                        }
-                        controller.eraseAt(change.position.x, change.position.y, eraserRadius)
-                    } else {
-                        change.historical.forEach {
-                            points.add(StrokePoint(it.position.x, it.position.y, sanitize(change.pressure)))
-                        }
-                        points.add(StrokePoint(change.position.x, change.position.y, sanitize(change.pressure)))
-                        liveStroke = ArrayList(points)
-                        liveTool = drawTool
+    Box(modifier.fillMaxSize()) {
+        // Layer 1 — cached committed strokes. Reading controller.revision here
+        // invalidates the cache exactly when the stroke set changes.
+        Box(
+            Modifier
+                .fillMaxSize()
+                .drawWithCache {
+                    @Suppress("UNUSED_EXPRESSION") controller.revision
+                    val w = size.width.toInt().coerceAtLeast(1)
+                    val h = size.height.toInt().coerceAtLeast(1)
+                    val bitmap = ImageBitmap(w, h)
+                    val canvas = GraphicsCanvas(bitmap)
+                    CanvasDrawScope().draw(this, layoutDirection, canvas, size) {
+                        controller.strokes.forEach { drawInk(it) }
                     }
-                    change.consume()
+                    onDrawBehind { drawImage(bitmap) }
                 }
+        )
 
-                handle(down)
+        // Layer 2 — input capture + live stroke overlay.
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(controller, palmRejection) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
 
-                while (true) {
-                    val event = awaitPointerEvent()
-                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                    if (!change.pressed) {
-                        change.consume()
-                        break
+                        // Palm rejection: ignore finger touches while inking.
+                        if (palmRejection && down.type == PointerType.Touch) return@awaitEachGesture
+
+                        val erasing =
+                            controller.tool == PenTool.ERASER || down.type == PointerType.Eraser
+                        val drawTool =
+                            if (down.type == PointerType.Eraser) PenTool.ERASER else controller.tool
+                        val points = ArrayList<StrokePoint>()
+
+                        fun handle(change: PointerInputChange) {
+                            if (erasing) {
+                                change.historical.forEach {
+                                    controller.eraseAt(it.position.x, it.position.y, eraserRadius)
+                                }
+                                controller.eraseAt(change.position.x, change.position.y, eraserRadius)
+                            } else {
+                                change.historical.forEach {
+                                    points.add(StrokePoint(it.position.x, it.position.y, sanitize(change.pressure)))
+                                }
+                                points.add(StrokePoint(change.position.x, change.position.y, sanitize(change.pressure)))
+                                liveStroke = ArrayList(points)
+                                liveTool = drawTool
+                            }
+                            change.consume()
+                        }
+
+                        handle(down)
+
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (!change.pressed) {
+                                change.consume()
+                                break
+                            }
+                            handle(change)
+                        }
+
+                        if (!erasing) {
+                            controller.commitStroke(points, drawTool)
+                            liveStroke = emptyList()
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        }
                     }
-                    handle(change)
                 }
-
-                if (!erasing) {
-                    controller.commitStroke(points, drawTool)
-                    liveStroke = emptyList()
-                }
-            }
-        }
-    ) {
-        controller.strokes.forEach { drawInk(it) }
-        if (liveStroke.size >= 2) {
-            drawInk(
-                Stroke(
-                    points = liveStroke,
-                    color = controller.color,
-                    baseWidth = if (liveTool == PenTool.HIGHLIGHTER) controller.strokeWidth * 4f
-                    else controller.strokeWidth,
-                    tool = liveTool,
+        ) {
+            if (liveStroke.size >= 2) {
+                drawInk(
+                    Stroke(
+                        points = liveStroke,
+                        color = controller.color,
+                        baseWidth = if (liveTool == PenTool.HIGHLIGHTER) controller.strokeWidth * 4f
+                        else controller.strokeWidth,
+                        tool = liveTool,
+                    )
                 )
-            )
+            }
         }
     }
 }

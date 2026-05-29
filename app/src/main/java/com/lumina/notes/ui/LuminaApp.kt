@@ -42,7 +42,7 @@ private sealed interface Detail {
 }
 
 @Composable
-fun LuminaApp(settings: AppSettings) {
+fun LuminaApp(settings: AppSettings, quickNote: Boolean = false) {
     val notesVm = notesListViewModel()
 
     var detail by rememberSaveable(
@@ -63,6 +63,15 @@ fun LuminaApp(settings: AppSettings) {
             },
         ),
     ) { mutableStateOf<Detail>(Detail.None) }
+
+    // S Pen "Create note" shortcut: spin up a fresh note exactly once.
+    var quickNoteHandled by rememberSaveable { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(quickNote) {
+        if (quickNote && !quickNoteHandled) {
+            quickNoteHandled = true
+            notesVm.createNote { detail = Detail.Note(it) }
+        }
+    }
 
     Surface(color = MaterialTheme.colorScheme.background) {
         BoxWithConstraints(Modifier.fillMaxSize()) {

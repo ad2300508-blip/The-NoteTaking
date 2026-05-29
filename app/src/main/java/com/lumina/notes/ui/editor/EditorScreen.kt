@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.outlined.PushPin as PushPinOutlined
@@ -73,6 +74,7 @@ fun EditorScreen(
 
     var mode by remember { mutableStateOf(EditorMode.TEXT) }
     var showColorPicker by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Column(modifier.fillMaxSize()) {
         TopAppBar(
@@ -124,6 +126,23 @@ fun EditorScreen(
                 }
                 IconButton(onClick = { showColorPicker = !showColorPicker }) {
                     Icon(Icons.Filled.Palette, contentDescription = "Colore")
+                }
+                IconButton(
+                    onClick = {
+                        val text = (title + "\n\n" + body).trim()
+                        if (text.isNotEmpty()) {
+                            val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(android.content.Intent.EXTRA_SUBJECT, title)
+                                putExtra(android.content.Intent.EXTRA_TEXT, text)
+                            }
+                            context.startActivity(
+                                android.content.Intent.createChooser(send, "Condividi nota")
+                            )
+                        }
+                    }
+                ) {
+                    Icon(Icons.Filled.Share, contentDescription = "Condividi")
                 }
                 IconButton(onClick = { viewModel.deleteNote(); onDeleted() }) {
                     Icon(Icons.Filled.Delete, contentDescription = "Elimina")
