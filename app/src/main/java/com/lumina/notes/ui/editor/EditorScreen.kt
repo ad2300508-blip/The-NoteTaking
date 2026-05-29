@@ -211,29 +211,42 @@ private fun TextBody(
     modifier: Modifier = Modifier,
 ) {
     val scroll = rememberScrollState()
-    Box(modifier.verticalScroll(scroll)) {
-        BasicTextField(
-            value = body,
-            onValueChange = onBodyChange,
-            textStyle = MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.onSurface,
-                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
-            ),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 12.dp),
-            decorationBox = { inner ->
-                if (body.isEmpty()) {
-                    Text(
-                        "Inizia a scrivere…",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                inner()
-            },
-        )
+    val stats = remember(body) { TextStatsCalculator.of(body) }
+    Box(modifier) {
+        Box(Modifier.fillMaxSize().verticalScroll(scroll)) {
+            BasicTextField(
+                value = body,
+                onValueChange = onBodyChange,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp),
+                decorationBox = { inner ->
+                    if (body.isEmpty()) {
+                        Text(
+                            "Inizia a scrivere…",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    inner()
+                },
+            )
+        }
+        if (body.isNotBlank()) {
+            Text(
+                stats.summary(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
+            )
+        }
     }
 }
 
