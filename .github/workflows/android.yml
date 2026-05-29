@@ -2,9 +2,13 @@ name: Android CI
 
 on:
   push:
-    branches: [ "**" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "**" ]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   build:
@@ -36,13 +40,29 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Run unit tests
-        run: ./gradlew test --stacktrace
+      - name: Build (unit tests + debug APK)
+        id: gradle
+        run: |
+          set -o pipefail
+          ./gradlew test assembleDebug --stacktrace --no-configuration-cache 2>&1 | tee build.log
 
-      - name: Assemble debug APK
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Report build failure on PR
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo '## ❌ CI build failed'
+            echo ''
+            echo 'Relevant log lines:'
+            echo '```'
+            grep -E "^e: |^w: |error:|FAILURE:|What went wrong|Caused by:|> Task .* FAILED|Execution failed" build.log | head -120 || tail -120 build.log
+            echo '```'
+          } > comment.md
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file comment.md || true
 
       - name: Upload debug APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: lumina-debug-apk

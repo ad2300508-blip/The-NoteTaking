@@ -4,6 +4,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+private const val EPS = 0.001f
+
 class StrokeTest {
 
     @Test
@@ -20,10 +22,10 @@ class StrokeTest {
         )
 
         val b = stroke.bounds()
-        assertEquals(10f, b[0]) // minX
-        assertEquals(5f, b[1])  // minY
-        assertEquals(40f, b[2]) // maxX
-        assertEquals(80f, b[3]) // maxY
+        assertEquals(10f, b[0], EPS) // minX
+        assertEquals(5f, b[1], EPS)  // minY
+        assertEquals(40f, b[2], EPS) // maxX
+        assertEquals(80f, b[3], EPS) // maxY
     }
 
     @Test
