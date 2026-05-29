@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -22,10 +23,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -94,6 +98,28 @@ fun NotesListScreen(
                         disabledIndicatorColor = Color.Transparent,
                     ),
                 )
+                Spacer(Modifier.height(10.dp))
+                androidx.compose.foundation.layout.Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilterChip(
+                        selected = state.filter == NoteFilter.ALL,
+                        onClick = { viewModel.onFilterChange(NoteFilter.ALL) },
+                        label = { Text("Tutte") },
+                    )
+                    FilterChip(
+                        selected = state.filter == NoteFilter.FAVORITES,
+                        onClick = { viewModel.onFilterChange(NoteFilter.FAVORITES) },
+                        label = { Text("Preferite") },
+                        leadingIcon = { Icon(Icons.Filled.Star, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    )
+                    FilterChip(
+                        selected = state.filter == NoteFilter.PINNED,
+                        onClick = { viewModel.onFilterChange(NoteFilter.PINNED) },
+                        label = { Text("Fissate") },
+                        leadingIcon = { Icon(Icons.Filled.PushPin, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    )
+                }
             }
 
             if (!state.loading && state.notes.isEmpty()) {

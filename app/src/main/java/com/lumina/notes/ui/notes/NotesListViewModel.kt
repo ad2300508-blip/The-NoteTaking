@@ -12,9 +12,12 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+enum class NoteFilter { ALL, FAVORITES, PINNED }
+
 data class NotesUiState(
     val notes: List<NoteEntity> = emptyList(),
     val query: String = "",
+    val filter: NoteFilter = NoteFilter.ALL,
     val loading: Boolean = true,
 )
 
@@ -22,20 +25,26 @@ data class NotesUiState(
 class NotesListViewModel(private val repo: NotesRepository) : ViewModel() {
 
     private val query = MutableStateFlow("")
+    private val filter = MutableStateFlow(NoteFilter.ALL)
 
     val state: StateFlow<NotesUiState> =
-        query
-            .flatMapLatest { q ->
+        kotlinx.coroutines.flow.combine(
+            query.flatMapLatest { q ->
                 if (q.isBlank()) repo.observeNotes() else repo.search(q)
+            },
+            query,
+            filter,
+        ) { notes, q, f ->
+            val filtered = when (f) {
+                NoteFilter.ALL -> notes
+                NoteFilter.FAVORITES -> notes.filter { it.isFavorite }
+                NoteFilter.PINNED -> notes.filter { it.isPinned }
             }
-            .let { notesFlow ->
-                kotlinx.coroutines.flow.combine(notesFlow, query) { notes, q ->
-                    NotesUiState(notes = notes, query = q, loading = false)
-                }
-            }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NotesUiState())
+            NotesUiState(notes = filtered, query = q, filter = f, loading = false)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NotesUiState())
 
     fun onQueryChange(value: String) { query.value = value }
+    fun onFilterChange(value: NoteFilter) { filter.value = value }
 
     /** Creates an empty note and returns its id so the UI can open it. */
     fun createNote(onCreated: (String) -> Unit) {

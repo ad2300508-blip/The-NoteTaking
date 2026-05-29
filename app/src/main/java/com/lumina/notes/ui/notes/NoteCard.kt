@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lumina.notes.data.local.NoteEntity
 import com.lumina.notes.ui.theme.NoteAccents
+import com.lumina.notes.util.RelativeTime
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -97,20 +98,27 @@ fun NoteCard(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            if (note.hasInk) {
-                Spacer(Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            Spacer(Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (note.hasInk) {
                     Icon(
                         Icons.Filled.Brush, contentDescription = null,
                         tint = accent, modifier = Modifier.size(14.dp),
                     )
                     Spacer(Modifier.size(6.dp))
                     Text(
-                        "Disegno a mano",
+                        "Disegno",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    Spacer(Modifier.weight(1f))
                 }
+                Text(
+                    RelativeTime.format(note.updatedAt),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = if (note.hasInk) Modifier else Modifier.fillMaxWidth(),
+                )
             }
         }
     }
