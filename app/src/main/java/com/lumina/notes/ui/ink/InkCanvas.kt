@@ -29,6 +29,7 @@ import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.lumina.notes.data.ink.PenTool
 import com.lumina.notes.data.ink.Stroke
@@ -68,7 +69,7 @@ fun InkCanvas(
                     val h = size.height.toInt().coerceAtLeast(1)
                     val bitmap = ImageBitmap(w, h)
                     val canvas = GraphicsCanvas(bitmap)
-                    CanvasDrawScope().draw(this, layoutDirection, canvas, size) {
+                    CanvasDrawScope().draw(this, LayoutDirection.Ltr, canvas, size) {
                         controller.strokes.forEach { drawInk(it) }
                     }
                     onDrawBehind { drawImage(bitmap) }
