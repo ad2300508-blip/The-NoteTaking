@@ -20,6 +20,8 @@ data class NoteEntity(
     @ColumnInfo(name = "ink_json") val inkJson: String = "",
     /** Index into the accent palette used to tint the note's card. */
     @ColumnInfo(name = "color_seed") val colorSeed: Int = 0,
+    /** Ink canvas paper ruling (see PaperStyle). */
+    @ColumnInfo(name = "paper_style", defaultValue = "0") val paperStyle: Int = 0,
     @ColumnInfo(name = "is_pinned") val isPinned: Boolean = false,
     @ColumnInfo(name = "is_favorite") val isFavorite: Boolean = false,
     @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis(),

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Draw
+import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PushPin
@@ -29,6 +31,8 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,8 +55,10 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lumina.notes.data.ink.PaperStyle
 import com.lumina.notes.data.ink.PenTool
 import com.lumina.notes.ui.ink.InkCanvas
+import com.lumina.notes.util.TextStatsCalculator
 
 private enum class EditorMode { TEXT, INK }
 
@@ -236,14 +242,38 @@ private fun InkArea(
     viewModel: EditorViewModel,
     palmRejection: Boolean,
 ) {
+    val paperOrdinal by viewModel.paperStyle.collectAsState()
+    val paper = PaperStyle.fromOrdinal(paperOrdinal)
+    var menuOpen by remember { mutableStateOf(false) }
+
     Box(Modifier.fillMaxSize()) {
-        // Subtle "paper" with a dotted grid drawn behind the ink.
-        PaperBackground(Modifier.fillMaxSize())
+        PaperBackground(style = paper, modifier = Modifier.fillMaxSize())
         InkCanvas(
             controller = viewModel.ink,
             palmRejection = palmRejection,
             modifier = Modifier.fillMaxSize(),
         )
+
+        // Paper-style picker (top-start overlay).
+        Box(Modifier.align(Alignment.TopStart).padding(8.dp)) {
+            androidx.compose.material3.FilledTonalButton(onClick = { menuOpen = true }) {
+                Icon(Icons.Filled.GridOn, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.size(8.dp))
+                Text(paper.label)
+            }
+            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                PaperStyle.entries.forEach { style ->
+                    DropdownMenuItem(
+                        text = { Text(style.label) },
+                        onClick = {
+                            viewModel.setPaperStyle(style.ordinal)
+                            menuOpen = false
+                        },
+                    )
+                }
+            }
+        }
+
         InkToolbar(
             controller = viewModel.ink,
             modifier = Modifier

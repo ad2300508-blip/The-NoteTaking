@@ -28,6 +28,9 @@ class EditorViewModel(
     private val _colorSeed = MutableStateFlow(0)
     val colorSeed: StateFlow<Int> = _colorSeed.asStateFlow()
 
+    private val _paperStyle = MutableStateFlow(0)
+    val paperStyle: StateFlow<Int> = _paperStyle.asStateFlow()
+
     private val _isPinned = MutableStateFlow(false)
     val isPinned: StateFlow<Boolean> = _isPinned.asStateFlow()
 
@@ -46,6 +49,7 @@ class EditorViewModel(
                 _title.value = note.title
                 _body.value = note.body
                 _colorSeed.value = note.colorSeed
+                _paperStyle.value = note.paperStyle
                 _isPinned.value = note.isPinned
                 _isFavorite.value = note.isFavorite
                 InkSerializer.decode(note.inkJson).let { strokes ->
@@ -79,6 +83,7 @@ class EditorViewModel(
     fun onTitleChange(value: String) { _title.value = value }
     fun onBodyChange(value: String) { _body.value = value }
     fun setColorSeed(seed: Int) { _colorSeed.value = seed; viewModelScope.launch { persist() } }
+    fun setPaperStyle(style: Int) { _paperStyle.value = style; viewModelScope.launch { persist() } }
 
     fun togglePin() { _isPinned.value = !_isPinned.value; viewModelScope.launch { persist() } }
     fun toggleFavorite() { _isFavorite.value = !_isFavorite.value; viewModelScope.launch { persist() } }
@@ -90,6 +95,7 @@ class EditorViewModel(
             body = _body.value,
             inkJson = ink.encode(),
             colorSeed = _colorSeed.value,
+            paperStyle = _paperStyle.value,
             isPinned = _isPinned.value,
             isFavorite = _isFavorite.value,
         )
