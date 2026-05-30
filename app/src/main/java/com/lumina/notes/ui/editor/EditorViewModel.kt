@@ -7,16 +7,19 @@ import com.lumina.notes.data.ink.InkSerializer
 import com.lumina.notes.data.local.NoteEntity
 import com.lumina.notes.data.local.TagsCodec
 import com.lumina.notes.data.repository.NotesRepository
+import com.lumina.notes.data.settings.SettingsRepository
 import com.lumina.notes.ui.ink.InkController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class EditorViewModel(
     private val repo: NotesRepository,
+    private val settings: SettingsRepository,
     private val noteId: String,
 ) : ViewModel() {
 
@@ -51,6 +54,11 @@ class EditorViewModel(
 
     init {
         viewModelScope.launch {
+            // Restore the last-used pen color/width.
+            settings.penPreferences.first().let { pen ->
+                ink.selectColor(pen.color)
+                ink.setWidth(pen.strokeWidth)
+            }
             val note = repo.getNote(noteId)
             if (note != null) {
                 loaded = note
@@ -87,6 +95,13 @@ class EditorViewModel(
                 .drop(1)
                 .debounce(600)
                 .collect { persist() }
+        }
+        // Remember the pen color/width globally as the user changes them.
+        viewModelScope.launch {
+            snapshotFlow { ink.color to ink.strokeWidth }
+                .drop(1)
+                .debounce(400)
+                .collect { (color, width) -> settings.setPen(color, width) }
         }
     }
 

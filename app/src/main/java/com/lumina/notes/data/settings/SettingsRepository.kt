@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.lumina.notes.util.FontScale
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +27,12 @@ data class ViewPreferences(
     val filterOrdinal: Int = 0,
 )
 
+/** Last-used pen settings, restored across notes/sessions. */
+data class PenPreferences(
+    val color: Long = 0xFF111418L,
+    val strokeWidth: Float = 4f,
+)
+
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 class SettingsRepository(private val context: Context) {
@@ -38,6 +45,8 @@ class SettingsRepository(private val context: Context) {
         val SORT = intPreferencesKey("notes_sort")
         val FILTER = intPreferencesKey("notes_filter")
         val FONT_SCALE = floatPreferencesKey("font_scale")
+        val PEN_COLOR = longPreferencesKey("pen_color")
+        val PEN_WIDTH = floatPreferencesKey("pen_width")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -55,6 +64,19 @@ class SettingsRepository(private val context: Context) {
             filterOrdinal = p[Keys.FILTER] ?: 0,
         )
     }
+
+    val penPreferences: Flow<PenPreferences> = context.dataStore.data.map { p ->
+        PenPreferences(
+            color = p[Keys.PEN_COLOR] ?: 0xFF111418L,
+            strokeWidth = p[Keys.PEN_WIDTH] ?: 4f,
+        )
+    }
+
+    suspend fun setPen(color: Long, strokeWidth: Float) =
+        context.dataStore.edit {
+            it[Keys.PEN_COLOR] = color
+            it[Keys.PEN_WIDTH] = strokeWidth
+        }.let {}
 
     suspend fun setSort(ordinal: Int) =
         context.dataStore.edit { it[Keys.SORT] = ordinal }.let {}

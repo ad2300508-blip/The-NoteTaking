@@ -30,7 +30,9 @@ fun notesListViewModel(): NotesListViewModel {
 fun editorViewModel(noteId: String): EditorViewModel {
     val container = appContainer()
     return viewModel(key = "editor-$noteId", factory = viewModelFactory {
-        initializer { EditorViewModel(container.notesRepository, noteId) }
+        initializer {
+            EditorViewModel(container.notesRepository, container.settingsRepository, noteId)
+        }
     })
 }
 
