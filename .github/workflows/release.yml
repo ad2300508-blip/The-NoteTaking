@@ -12,11 +12,9 @@ on:
 permissions:
   contents: write
 
-# Don't cancel an in-flight release when another push arrives — let each
-# build finish so the APK actually gets published. Runs queue instead.
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
+# No concurrency group on purpose: a shared group makes GitHub drop queued
+# runs when pushes come quickly, so APKs never publish. Each run has a unique
+# version (run_number), so letting them all run independently is fine.
 
 jobs:
   release:
