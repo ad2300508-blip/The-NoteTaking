@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
@@ -122,6 +123,12 @@ fun InkToolbar(
                 }
                 IconButton(onClick = controller::redo, enabled = controller.canRedo) {
                     Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = "Ripeti")
+                }
+                IconButton(
+                    onClick = { tap(); controller.straightenLastStroke() },
+                    enabled = controller.strokes.isNotEmpty(),
+                ) {
+                    Icon(Icons.Filled.AutoFixHigh, contentDescription = "Raddrizza forma")
                 }
                 IconButton(onClick = { confirmClear = true }, enabled = controller.canUndo) {
                     Icon(Icons.Filled.Delete, contentDescription = "Cancella tutto")

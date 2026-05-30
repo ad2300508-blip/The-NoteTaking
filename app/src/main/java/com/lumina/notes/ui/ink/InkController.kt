@@ -181,6 +181,30 @@ class InkController(initial: List<Stroke> = emptyList()) {
 
     fun encode(): String = InkSerializer.encode(strokes)
 
+    /**
+     * Replaces the most recent pen stroke with its recognized ideal shape
+     * (line / rectangle / ellipse). Returns true if a shape was applied. One
+     * undo step, so it's easy to revert if the guess is wrong.
+     */
+    fun straightenLastStroke(): Boolean {
+        val last = strokes.lastOrNull() ?: return false
+        if (last.tool != PenTool.PEN) return false
+        val shape = com.lumina.notes.data.ink.ShapeRecognizer.recognize(last.points)
+            ?: return false
+        val newPoints = when (shape) {
+            is com.lumina.notes.data.ink.RecognizedShape.Line ->
+                listOf(StrokePoint(shape.x1, shape.y1), StrokePoint(shape.x2, shape.y2))
+            is com.lumina.notes.data.ink.RecognizedShape.Rectangle ->
+                com.lumina.notes.data.ink.ShapeRecognizer.rectToPoints(shape)
+            is com.lumina.notes.data.ink.RecognizedShape.Ellipse ->
+                com.lumina.notes.data.ink.ShapeRecognizer.ellipseToPoints(shape)
+        }
+        pushHistory()
+        strokes[strokes.lastIndex] = last.copy(points = newPoints)
+        revision++
+        return true
+    }
+
     /** Largest y-coordinate across all ink (0 when empty); drives page growth. */
     fun contentBottom(): Float {
         var maxY = 0f
