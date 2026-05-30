@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lumina.notes.data.ink.InkSerializer
 import com.lumina.notes.data.local.NoteEntity
+import com.lumina.notes.data.local.TagsCodec
 import com.lumina.notes.data.repository.NotesRepository
 import com.lumina.notes.ui.ink.InkController
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +38,9 @@ class EditorViewModel(
     private val _isFavorite = MutableStateFlow(false)
     val isFavorite: StateFlow<Boolean> = _isFavorite.asStateFlow()
 
+    private val _tags = MutableStateFlow<List<String>>(emptyList())
+    val tags: StateFlow<List<String>> = _tags.asStateFlow()
+
     val ink = InkController()
 
     private var loaded: NoteEntity? = null
@@ -52,6 +56,7 @@ class EditorViewModel(
                 _paperStyle.value = note.paperStyle
                 _isPinned.value = note.isPinned
                 _isFavorite.value = note.isFavorite
+                _tags.value = TagsCodec.decode(note.tags)
                 InkSerializer.decode(note.inkJson).let { strokes ->
                     ink.strokes.clear()
                     ink.strokes.addAll(strokes)
@@ -88,6 +93,17 @@ class EditorViewModel(
     fun togglePin() { _isPinned.value = !_isPinned.value; viewModelScope.launch { persist() } }
     fun toggleFavorite() { _isFavorite.value = !_isFavorite.value; viewModelScope.launch { persist() } }
 
+    fun addTag(tag: String) {
+        val updated = TagsCodec.decode(TagsCodec.add(TagsCodec.encode(_tags.value), tag))
+        _tags.value = updated
+        viewModelScope.launch { persist() }
+    }
+
+    fun removeTag(tag: String) {
+        _tags.value = _tags.value.filterNot { it.equals(tag, ignoreCase = true) }
+        viewModelScope.launch { persist() }
+    }
+
     suspend fun persist() {
         val base = loaded ?: NoteEntity(id = noteId)
         val updated = base.copy(
@@ -96,6 +112,7 @@ class EditorViewModel(
             inkJson = ink.encode(),
             colorSeed = _colorSeed.value,
             paperStyle = _paperStyle.value,
+            tags = TagsCodec.encode(_tags.value),
             isPinned = _isPinned.value,
             isFavorite = _isFavorite.value,
         )

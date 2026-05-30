@@ -167,6 +167,13 @@ fun EditorScreen(
             )
         }
 
+        TagEditor(
+            tags = viewModel.tags.collectAsState().value,
+            onAdd = viewModel::addTag,
+            onRemove = viewModel::removeTag,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        )
+
         // Mode switch
         SingleChoiceSegmentedButtonRow(
             Modifier

@@ -22,6 +22,8 @@ data class NoteEntity(
     @ColumnInfo(name = "color_seed") val colorSeed: Int = 0,
     /** Ink canvas paper ruling (see PaperStyle). */
     @ColumnInfo(name = "paper_style", defaultValue = "0") val paperStyle: Int = 0,
+    /** Comma-separated tag labels (see TagsCodec). Empty when untagged. */
+    @ColumnInfo(name = "tags", defaultValue = "") val tags: String = "",
     @ColumnInfo(name = "is_pinned") val isPinned: Boolean = false,
     @ColumnInfo(name = "is_favorite") val isFavorite: Boolean = false,
     @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis(),
