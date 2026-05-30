@@ -25,6 +25,7 @@ import com.lumina.notes.ui.theme.NoteAccents
 @Composable
 fun PaperBackground(style: PaperStyle, modifier: Modifier = Modifier) {
     val lineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+    val marginColor = Color(0xFFE57373).copy(alpha = 0.5f)
     val surface = MaterialTheme.colorScheme.surface
     Canvas(modifier.background(surface)) {
         if (style == PaperStyle.PLAIN) return@Canvas
@@ -62,6 +63,14 @@ fun PaperBackground(style: PaperStyle, modifier: Modifier = Modifier) {
                     drawLine(lineColor, Offset(0f, y), Offset(size.width, y), w)
                     y += step
                 }
+                // Classic red margin rule down the left side of the page.
+                val marginX = 48.dp.toPx()
+                drawLine(
+                    color = marginColor,
+                    start = Offset(marginX, 0f),
+                    end = Offset(marginX, size.height),
+                    strokeWidth = 1.5.dp.toPx(),
+                )
             }
             PaperStyle.PLAIN -> Unit
         }
