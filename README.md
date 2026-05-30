@@ -7,17 +7,34 @@ schermo grande, alte frequenze di aggiornamento e **S Pen** come cittadini di pr
 
 > Costruita con Kotlin + Jetpack Compose + Material 3 (Material You).
 
-## ✨ Caratteristiche
+## ✨ Caratteristiche — quaderno digitale per S Pen
 
-- **Inchiostro S Pen a pressione reale** — i tratti si assottigliano/ingrossano in base alla
-  pressione della penna; campionamento ad alta frequenza con punti storici (`historical`)
-  per linee fluide anche a 120 Hz.
-- **Strumenti**: penna, evidenziatore (semitrasparente, fusione *multiply*) e **gomma per tratto**.
-- **Tasto laterale S Pen = gomma** — quando il puntatore è di tipo `Eraser`, cancella al volo.
-- **Rifiuto del palmo** — durante il disegno con la penna i tocchi delle dita vengono ignorati
-  (attivabile dalle impostazioni).
-- **Undo / Redo / Cancella tutto** sull'inchiostro.
-- **Testo + disegno nella stessa nota** — passa tra modalità *Testo* e *Inchiostro*.
+Lumina è **handwriting-first**: una nuova nota nasce come pagina di quaderno
+(inchiostro su carta a righe con margine rosso), la tastiera è secondaria.
+
+**Penna realistica (S Pen):**
+- **Pressione reale** (`change.pressure`) — il tratto si assottiglia/ingrossa.
+- **Velocità** — penna stilografica: scrivi piano = più spesso, veloce = sottile.
+- **Inclinazione (tilt)** — `MotionEvent.AXIS_TILT`: inclini la penna e il tratto
+  si allarga come una punta a scalpello (specie l'evidenziatore).
+- **Hover** — avvicinando la S Pen (senza toccare) compare un anello sulla punta.
+- **Tasto laterale** — `PointerType.Eraser` cancella al volo; con **Air Actions**
+  (SDK Samsung S Pen Remote) il pulsante cambia strumento.
+- **Smoothing** anti-jitter per una calligrafia più pulita.
+- **Rifiuto del palmo** — i tocchi delle dita sono ignorati mentre scrivi.
+
+**Strumenti & gesti:**
+- Penna, evidenziatore (*multiply*), gomma per tratto, **lazo** (cerchia →
+  evidenzia → sposta o elimina).
+- **Pinch-to-zoom & pan** a due dita; tratti vettoriali sempre nitidi.
+- **Undo / Redo a snapshot** — copre disegno, gomma, lazo e spostamenti.
+- Stili carta: liscio / punti / griglia / righe.
+- Testo + disegno nella stessa nota; il quaderno ricorda l'ultima modalità.
+
+> ⚠️ **Verifica**: la logica (pressione→larghezza, tilt, smoothing, lazo,
+> undo, ecc.) è coperta da ~95 unit test e dalla CI. Il *comportamento* della
+> S Pen (pressione/tilt/hover/pulsante reali) va però provato installando
+> l'APK sul Tab — non è simulabile in CI. Vedi [INSTALL.md](INSTALL.md).
 - **Layout adattivo a due pannelli** — su tablet la lista e l'editor sono affiancati
   (list–detail); su schermi stretti diventa a schermo intero con transizioni animate.
 - **Material You** — colori dinamici dal sistema, tema chiaro/scuro/automatico.
