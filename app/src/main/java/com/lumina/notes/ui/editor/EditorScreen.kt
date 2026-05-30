@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
@@ -287,8 +288,15 @@ private fun InkArea(
             }
         }
 
+        val ctx = androidx.compose.ui.platform.LocalContext.current
         InkToolbar(
             controller = viewModel.ink,
+            onExportPng = {
+                val bmp = com.lumina.notes.util.InkExporter.renderToBitmap(
+                    viewModel.ink.strokes.toList()
+                )
+                com.lumina.notes.util.InkExporter.share(ctx, bmp)
+            },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .windowInsetsPadding(WindowInsets.navigationBars)

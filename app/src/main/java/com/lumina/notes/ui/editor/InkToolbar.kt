@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Highlight
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +44,7 @@ import com.lumina.notes.ui.theme.InkPalette
 @Composable
 fun InkToolbar(
     controller: InkController,
+    onExportPng: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -92,6 +94,9 @@ fun InkToolbar(
                 }
                 IconButton(onClick = controller::clear, enabled = controller.canUndo) {
                     Icon(Icons.Filled.Delete, contentDescription = "Cancella tutto")
+                }
+                IconButton(onClick = onExportPng, enabled = controller.canUndo) {
+                    Icon(Icons.Filled.Share, contentDescription = "Condividi disegno")
                 }
             }
 
