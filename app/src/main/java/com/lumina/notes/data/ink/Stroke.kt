@@ -29,6 +29,8 @@ data class Stroke(
     val color: Long,
     val baseWidth: Float,
     val tool: PenTool,
+    /** Average S Pen tilt (radians from vertical) over the stroke; 0 = upright. */
+    val tilt: Float = 0f,
 ) {
     val isEmpty: Boolean get() = points.isEmpty()
 

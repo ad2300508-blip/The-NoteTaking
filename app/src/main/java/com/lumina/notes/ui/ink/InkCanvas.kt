@@ -31,6 +31,7 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
@@ -38,6 +39,7 @@ import com.lumina.notes.data.ink.NibWidth
 import com.lumina.notes.data.ink.PenTool
 import com.lumina.notes.data.ink.Stroke
 import com.lumina.notes.data.ink.StrokePoint
+import com.lumina.notes.data.ink.TiltShading
 
 /**
  * The freehand drawing surface. Reads true stylus [pressure] and pointer
@@ -68,6 +70,9 @@ fun InkCanvas(
     var hover by remember { mutableStateOf<Offset?>(null) }
     // The in-progress lasso outline, in screen space.
     var lassoPath by remember { mutableStateOf<List<Offset>>(emptyList()) }
+    // Latest S Pen tilt (radians from vertical), sampled from the raw
+    // MotionEvent; applied to the stroke at commit time.
+    val currentTilt = remember { floatArrayOf(0f) }
     val eraserRadius = with(LocalDensity.current) { 16.dp.toPx() }
     val haptics = LocalHapticFeedback.current
 
@@ -82,6 +87,17 @@ fun InkCanvas(
     Box(
         modifier
             .fillMaxSize()
+            // Read real S Pen tilt from the raw MotionEvent (Compose's pointer
+            // model doesn't expose it). We only observe; we never consume.
+            .pointerInteropFilter(
+                onTouchEvent = { ev ->
+                    if (ev.pointerCount > 0) {
+                        val t = ev.getAxisValue(android.view.MotionEvent.AXIS_TILT, 0)
+                        if (!t.isNaN()) currentTilt[0] = t
+                    }
+                    false // don't consume; let the gesture detector handle it
+                },
+            )
             .pointerInput(controller, palmRejection) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
@@ -183,7 +199,7 @@ fun InkCanvas(
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                             }
                         } else {
-                            controller.commitStroke(points, drawTool)
+                            controller.commitStroke(points, drawTool, currentTilt[0])
                             liveStroke = emptyList()
                             haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         }
@@ -234,6 +250,7 @@ fun InkCanvas(
                             baseWidth = if (liveTool == PenTool.HIGHLIGHTER) controller.strokeWidth * 4f
                             else controller.strokeWidth,
                             tool = liveTool,
+                            tilt = currentTilt[0],
                         )
                     )
                 }
@@ -281,6 +298,9 @@ private fun DrawScope.drawInk(stroke: Stroke) {
     if (pts.size < 2) return
     val color = Color(stroke.color)
 
+    // A reclined S Pen broadens the stroke like a chisel nib.
+    val tiltMul = TiltShading.widthMultiplier(stroke.tilt)
+
     when (stroke.tool) {
         PenTool.HIGHLIGHTER -> {
             val path = smoothPath(pts)
@@ -288,7 +308,7 @@ private fun DrawScope.drawInk(stroke: Stroke) {
                 path = path,
                 color = color.copy(alpha = 0.30f),
                 style = StrokeStyle(
-                    width = stroke.baseWidth,
+                    width = stroke.baseWidth * tiltMul,
                     cap = StrokeCap.Round,
                     join = StrokeJoin.Round,
                 ),
@@ -303,7 +323,7 @@ private fun DrawScope.drawInk(stroke: Stroke) {
                 val b = pts[i]
                 val pressure = (a.pressure + b.pressure) * 0.5f
                 val dist = NibWidth.distance(a.x, a.y, b.x, b.y)
-                val w = NibWidth.of(stroke.baseWidth, pressure, dist)
+                val w = NibWidth.of(stroke.baseWidth, pressure, dist) * tiltMul
                 drawLine(
                     color = color,
                     start = Offset(a.x, a.y),

@@ -18,6 +18,7 @@ object InkSerializer {
             obj.put("c", s.color)
             obj.put("w", s.baseWidth.toDouble())
             obj.put("t", s.tool.ordinal)
+            if (s.tilt != 0f) obj.put("ti", s.tilt.toDouble())
             val pts = JSONArray()
             for (p in s.points) {
                 pts.put(p.x.toDouble())
@@ -57,6 +58,7 @@ object InkSerializer {
                         color = obj.getLong("c"),
                         baseWidth = obj.getDouble("w").toFloat(),
                         tool = PenTool.entries[toolOrdinal],
+                        tilt = obj.optDouble("ti", 0.0).toFloat(),
                     )
                 )
             }

@@ -93,19 +93,19 @@ class InkController(initial: List<Stroke> = emptyList()) {
         revision++
     }
 
-    fun commitStroke(points: List<StrokePoint>, withTool: PenTool) {
+    fun commitStroke(points: List<StrokePoint>, withTool: PenTool, tilt: Float = 0f) {
         if (points.size < 2) {
             // A tap with the pen still leaves a dot.
             if (points.size == 1) {
                 val p = points.first()
-                addStroke(Stroke(listOf(p, p.copy(x = p.x + 0.5f)), color, strokeWidth, withTool))
+                addStroke(Stroke(listOf(p, p.copy(x = p.x + 0.5f)), color, strokeWidth, withTool, tilt))
             }
             return
         }
         val width = if (withTool == PenTool.HIGHLIGHTER) strokeWidth * 4f else strokeWidth
         // Smooth out S Pen sampling jitter for cleaner handwriting.
         val shaped = StrokeSmoothing.smooth(points)
-        addStroke(Stroke(shaped, color, width, withTool))
+        addStroke(Stroke(shaped, color, width, withTool, tilt))
     }
 
     private fun addStroke(stroke: Stroke) {
