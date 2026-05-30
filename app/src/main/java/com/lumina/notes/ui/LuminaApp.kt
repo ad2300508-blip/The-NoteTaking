@@ -152,6 +152,7 @@ private fun DetailPane(
         is Detail.Note -> EditorScreen(
             viewModel = editorViewModel(detail.id),
             palmRejection = settings.palmRejection,
+            fontScale = settings.fontScale,
             onBack = onClose,
             onDeleted = onClose,
             showBackButton = showBackButton,

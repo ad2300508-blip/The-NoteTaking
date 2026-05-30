@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -17,6 +18,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -27,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.lumina.notes.data.settings.AppSettings
+import com.lumina.notes.util.FontScale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,6 +61,7 @@ fun SettingsScreen(
                 onChange = viewModel::setDynamicColor,
             )
             ThemeRow(state = state, onChange = viewModel::setDarkTheme)
+            FontScaleRow(value = state.fontScale, onChange = viewModel::setFontScale)
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
             SectionTitle("S Pen")
@@ -113,6 +117,32 @@ private fun SwitchRow(
             )
         }
         Switch(checked = checked, onCheckedChange = onChange)
+    }
+}
+
+@Composable
+private fun FontScaleRow(value: Float, onChange: (Float) -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text("Dimensione testo", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Scala il testo dell'editor",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Slider(
+                value = value,
+                onValueChange = onChange,
+                valueRange = FontScale.MIN..FontScale.MAX,
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        Text(FontScale.label(value), style = MaterialTheme.typography.titleMedium)
     }
 }
 

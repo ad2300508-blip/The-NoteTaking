@@ -68,6 +68,7 @@ private enum class EditorMode { TEXT, INK }
 fun EditorScreen(
     viewModel: EditorViewModel,
     palmRejection: Boolean,
+    fontScale: Float = 1f,
     onBack: () -> Unit,
     onDeleted: () -> Unit,
     showBackButton: Boolean,
@@ -199,6 +200,7 @@ fun EditorScreen(
                 EditorMode.TEXT -> TextBody(
                     body = body,
                     onBodyChange = viewModel::onBodyChange,
+                    fontScale = fontScale,
                     modifier = Modifier
                         .fillMaxSize()
                         .imePadding(),
@@ -216,19 +218,23 @@ fun EditorScreen(
 private fun TextBody(
     body: String,
     onBodyChange: (String) -> Unit,
+    fontScale: Float = 1f,
     modifier: Modifier = Modifier,
 ) {
     val scroll = rememberScrollState()
     val stats = remember(body) { TextStatsCalculator.of(body) }
+    val base = MaterialTheme.typography.bodyLarge
+    val scaled = base.copy(
+        color = MaterialTheme.colorScheme.onSurface,
+        fontSize = base.fontSize * fontScale,
+        lineHeight = base.lineHeight * fontScale,
+    )
     Box(modifier) {
         Box(Modifier.fillMaxSize().verticalScroll(scroll)) {
             BasicTextField(
                 value = body,
                 onValueChange = onBodyChange,
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
-                ),
+                textStyle = scaled,
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 modifier = Modifier
                     .fillMaxWidth()

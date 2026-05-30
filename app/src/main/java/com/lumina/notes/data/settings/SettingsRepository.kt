@@ -5,8 +5,10 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.lumina.notes.util.FontScale
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -15,6 +17,7 @@ data class AppSettings(
     val dynamicColor: Boolean = true,
     val darkTheme: Boolean? = null, // null = follow system
     val palmRejection: Boolean = true,
+    val fontScale: Float = FontScale.DEFAULT,
 )
 
 /** Persisted notes-list view preferences (sort order + filter). */
@@ -34,6 +37,7 @@ class SettingsRepository(private val context: Context) {
         val PALM = booleanPreferencesKey("palm_rejection")
         val SORT = intPreferencesKey("notes_sort")
         val FILTER = intPreferencesKey("notes_filter")
+        val FONT_SCALE = floatPreferencesKey("font_scale")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -41,6 +45,7 @@ class SettingsRepository(private val context: Context) {
             dynamicColor = p[Keys.DYNAMIC] ?: true,
             darkTheme = if (p[Keys.DARK_SET] == true) (p[Keys.DARK] ?: false) else null,
             palmRejection = p[Keys.PALM] ?: true,
+            fontScale = FontScale.sanitize(p[Keys.FONT_SCALE] ?: FontScale.DEFAULT),
         )
     }
 
@@ -73,4 +78,7 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setPalmRejection(value: Boolean) =
         context.dataStore.edit { it[Keys.PALM] = value }.let {}
+
+    suspend fun setFontScale(value: Float) =
+        context.dataStore.edit { it[Keys.FONT_SCALE] = FontScale.sanitize(value) }.let {}
 }

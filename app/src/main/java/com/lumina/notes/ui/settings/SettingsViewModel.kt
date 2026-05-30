@@ -17,4 +17,5 @@ class SettingsViewModel(private val repo: SettingsRepository) : ViewModel() {
     fun setDynamicColor(value: Boolean) = viewModelScope.launch { repo.setDynamicColor(value) }
     fun setDarkTheme(value: Boolean?) = viewModelScope.launch { repo.setDarkTheme(value) }
     fun setPalmRejection(value: Boolean) = viewModelScope.launch { repo.setPalmRejection(value) }
+    fun setFontScale(value: Float) = viewModelScope.launch { repo.setFontScale(value) }
 }
