@@ -31,6 +31,9 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import com.lumina.notes.data.ink.PenTool
 import com.lumina.notes.ui.ink.InkController
 import com.lumina.notes.ui.theme.InkPalette
+import com.lumina.notes.util.ColorHsv
 
 @Composable
 fun InkToolbar(
@@ -49,6 +53,7 @@ fun InkToolbar(
 ) {
     val haptics = LocalHapticFeedback.current
     fun tap() = haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+    var hue by remember { mutableFloatStateOf(210f) }
 
     Surface(
         modifier = modifier,
@@ -118,6 +123,29 @@ fun InkToolbar(
                             else Color(controller.color),
                             CircleShape,
                         )
+                )
+            }
+
+            // Custom color: a hue slider feeds a live preview swatch.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text2("Colore")
+                Slider(
+                    value = hue,
+                    onValueChange = {
+                        hue = it
+                        val c = ColorHsv.toArgb(it, 0.9f, 0.9f)
+                        controller.selectColor(c)
+                        if (controller.tool == PenTool.ERASER) controller.selectTool(PenTool.PEN)
+                    },
+                    valueRange = 0f..360f,
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .width(220.dp),
+                )
+                Box(
+                    Modifier
+                        .size(24.dp)
+                        .background(Color(ColorHsv.toArgb(hue, 0.9f, 0.9f)), CircleShape)
                 )
             }
         }
