@@ -35,6 +35,7 @@ import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import com.lumina.notes.data.ink.DoubleTapDetector
 import com.lumina.notes.data.ink.NibWidth
 import com.lumina.notes.data.ink.PageMetrics
 import com.lumina.notes.data.ink.PenTool
@@ -75,6 +76,8 @@ fun InkCanvas(
     // Latest S Pen tilt (radians from vertical), sampled from the raw
     // MotionEvent; applied to the stroke at commit time.
     val currentTilt = remember { floatArrayOf(0f) }
+    // Double-tap of the pen tip toggles the eraser.
+    val doubleTap = remember { DoubleTapDetector() }
     val eraserRadius = with(LocalDensity.current) { 16.dp.toPx() }
     val haptics = LocalHapticFeedback.current
 
@@ -210,9 +213,26 @@ fun InkCanvas(
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                             }
                         } else {
-                            controller.commitStroke(points, drawTool, currentTilt[0])
-                            liveStroke = emptyList()
-                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            // A pen tap (barely any movement) feeds the
+                            // double-tap detector: two quick taps toggle the
+                            // eraser without visiting the toolbar.
+                            val isTap = pen && strokeSpan(points) <= 8f
+                            if (isTap && doubleTap.onTap(
+                                    down.position.x, down.position.y,
+                                    System.currentTimeMillis(),
+                                )
+                            ) {
+                                controller.selectTool(
+                                    if (controller.tool == PenTool.ERASER) PenTool.PEN
+                                    else PenTool.ERASER
+                                )
+                                liveStroke = emptyList()
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            } else {
+                                controller.commitStroke(points, drawTool, currentTilt[0])
+                                liveStroke = emptyList()
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            }
                         }
                     }
                 }
@@ -325,6 +345,18 @@ fun InkCanvas(
 
 private fun sanitize(pressure: Float): Float =
     if (pressure.isNaN() || pressure <= 0f) 1f else pressure.coerceIn(0.05f, 1f)
+
+/** Diagonal extent of a point set; near-zero for a tap. */
+private fun strokeSpan(points: List<StrokePoint>): Float {
+    if (points.size < 2) return 0f
+    var minX = Float.MAX_VALUE; var minY = Float.MAX_VALUE
+    var maxX = -Float.MAX_VALUE; var maxY = -Float.MAX_VALUE
+    for (p in points) {
+        if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x
+        if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y
+    }
+    return kotlin.math.hypot(maxX - minX, maxY - minY)
+}
 
 private fun DrawScope.drawInk(stroke: Stroke) {
     val pts = stroke.points
