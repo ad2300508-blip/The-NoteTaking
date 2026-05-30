@@ -203,27 +203,32 @@ fun NotesListScreen(
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     items(state.notes, key = { it.id }) { note ->
-                        SwipeToDeleteNote(
-                            onDelete = {
-                                viewModel.deleteWithUndo(note)
-                                scope.launch {
-                                    val result = snackbarHost.showSnackbar(
-                                        message = "Nota eliminata",
-                                        actionLabel = "Annulla",
-                                        duration = SnackbarDuration.Short,
-                                    )
-                                    if (result == SnackbarResult.ActionPerformed) {
-                                        viewModel.undoDelete()
-                                    }
+                        val deleteWithUndo = {
+                            viewModel.deleteWithUndo(note)
+                            scope.launch {
+                                val result = snackbarHost.showSnackbar(
+                                    message = "Nota eliminata",
+                                    actionLabel = "Annulla",
+                                    duration = SnackbarDuration.Short,
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    viewModel.undoDelete()
                                 }
-                            },
+                            }
+                            Unit
+                        }
+                        SwipeToDeleteNote(
+                            onDelete = deleteWithUndo,
                             modifier = Modifier.animateItem(),
                         ) {
                             NoteCard(
                                 note = note,
                                 selected = note.id == selectedNoteId,
                                 onClick = { onOpenNote(note.id) },
-                                onLongClick = { viewModel.togglePin(note) },
+                                onTogglePin = { viewModel.togglePin(note) },
+                                onToggleFavorite = { viewModel.toggleFavorite(note) },
+                                onDuplicate = { viewModel.duplicate(note) },
+                                onDelete = deleteWithUndo,
                             )
                         }
                     }

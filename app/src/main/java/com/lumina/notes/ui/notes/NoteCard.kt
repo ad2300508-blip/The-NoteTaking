@@ -16,15 +16,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Brush
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,15 +53,19 @@ fun NoteCard(
     note: NoteEntity,
     selected: Boolean,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
+    onTogglePin: () -> Unit,
+    onToggleFavorite: () -> Unit,
+    onDuplicate: () -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val accent = NoteAccents[note.colorSeed % NoteAccents.size]
+    var menuOpen by remember { mutableStateOf(false) }
     Card(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+            .combinedClickable(onClick = onClick, onLongClick = { menuOpen = true }),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (selected)
@@ -64,6 +75,17 @@ fun NoteCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 6.dp else 1.dp),
     ) {
+        Box {
+        NoteContextMenu(
+            expanded = menuOpen,
+            isPinned = note.isPinned,
+            isFavorite = note.isFavorite,
+            onDismiss = { menuOpen = false },
+            onTogglePin = onTogglePin,
+            onToggleFavorite = onToggleFavorite,
+            onDuplicate = onDuplicate,
+            onDelete = onDelete,
+        )
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -149,6 +171,42 @@ fun NoteCard(
                 )
             }
         }
+        } // Box
+    }
+}
+
+@Composable
+private fun NoteContextMenu(
+    expanded: Boolean,
+    isPinned: Boolean,
+    isFavorite: Boolean,
+    onDismiss: () -> Unit,
+    onTogglePin: () -> Unit,
+    onToggleFavorite: () -> Unit,
+    onDuplicate: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        DropdownMenuItem(
+            text = { Text(if (isPinned) "Rimuovi da fissate" else "Fissa in alto") },
+            leadingIcon = { Icon(Icons.Filled.PushPin, contentDescription = null) },
+            onClick = { onTogglePin(); onDismiss() },
+        )
+        DropdownMenuItem(
+            text = { Text(if (isFavorite) "Rimuovi dai preferiti" else "Aggiungi ai preferiti") },
+            leadingIcon = { Icon(Icons.Filled.Star, contentDescription = null) },
+            onClick = { onToggleFavorite(); onDismiss() },
+        )
+        DropdownMenuItem(
+            text = { Text("Duplica") },
+            leadingIcon = { Icon(Icons.Filled.ContentCopy, contentDescription = null) },
+            onClick = { onDuplicate(); onDismiss() },
+        )
+        DropdownMenuItem(
+            text = { Text("Elimina") },
+            leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null) },
+            onClick = { onDelete(); onDismiss() },
+        )
     }
 }
 

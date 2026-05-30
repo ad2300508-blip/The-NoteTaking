@@ -97,6 +97,7 @@ class NotesListViewModel(private val repo: NotesRepository) : ViewModel() {
     fun togglePin(note: NoteEntity) = viewModelScope.launch { repo.togglePin(note) }
     fun toggleFavorite(note: NoteEntity) = viewModelScope.launch { repo.toggleFavorite(note) }
     fun delete(note: NoteEntity) = viewModelScope.launch { repo.delete(note) }
+    fun duplicate(note: NoteEntity) = viewModelScope.launch { repo.duplicate(note) }
 
     /** Removes [note] but keeps a copy so [undoDelete] can restore it verbatim. */
     fun deleteWithUndo(note: NoteEntity) {

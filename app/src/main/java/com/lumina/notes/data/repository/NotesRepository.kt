@@ -3,6 +3,7 @@ package com.lumina.notes.data.repository
 import com.lumina.notes.data.local.NoteDao
 import com.lumina.notes.data.local.NoteEntity
 import kotlinx.coroutines.flow.Flow
+import java.util.UUID
 
 class NotesRepository(private val dao: NoteDao) {
 
@@ -29,4 +30,24 @@ class NotesRepository(private val dao: NoteDao) {
 
     suspend fun toggleFavorite(note: NoteEntity) =
         dao.upsert(note.copy(isFavorite = !note.isFavorite))
+
+    /** Creates an independent copy of [note] (fresh id, not pinned) and returns it. */
+    suspend fun duplicate(note: NoteEntity): NoteEntity {
+        val now = System.currentTimeMillis()
+        val copy = note.copy(
+            id = UUID.randomUUID().toString(),
+            title = duplicateTitle(note.title),
+            isPinned = false,
+            createdAt = now,
+            updatedAt = now,
+        )
+        dao.upsert(copy)
+        return copy
+    }
+
+    companion object {
+        /** Title for a duplicated note; blank stays blank. Pure, for testing. */
+        fun duplicateTitle(title: String): String =
+            if (title.isBlank()) "" else "$title (copia)"
+    }
 }
