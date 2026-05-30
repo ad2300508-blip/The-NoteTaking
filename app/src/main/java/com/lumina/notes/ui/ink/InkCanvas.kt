@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.lumina.notes.data.ink.NibWidth
+import com.lumina.notes.data.ink.PageMetrics
 import com.lumina.notes.data.ink.PenTool
 import com.lumina.notes.data.ink.Stroke
 import com.lumina.notes.data.ink.StrokePoint
@@ -172,7 +173,16 @@ fun InkCanvas(
                                 val pan = event.calculatePan()
                                 val centroid = event.calculateCentroid()
                                 if (centroid != Offset.Unspecified) {
+                                    // One "page" is a viewport tall; the sheet grows with content.
+                                    val pageH = size.height.toFloat()
+                                    val sheetH = PageMetrics.canvasHeight(
+                                        contentBottom = controller.contentBottom(),
+                                        pageHeight = pageH,
+                                        minPages = 1,
+                                        growMargin = pageH * 0.25f,
+                                    )
                                     transform = transform.transform(centroid, zoom, pan)
+                                        .clampVertical(size.height.toFloat(), sheetH)
                                     onZoomChange(transform.scale)
                                 }
                                 event.changes.forEach { it.consume() }
@@ -235,6 +245,24 @@ fun InkCanvas(
                 translate(transform.offset.x, transform.offset.y)
                 scale(transform.scale, transform.scale, pivot = Offset.Zero)
             }) {
+                // Faint page-break lines so multi-page growth is visible.
+                val pageH = size.height
+                val sheetH = PageMetrics.canvasHeight(
+                    contentBottom = controller.contentBottom(),
+                    pageHeight = pageH,
+                    minPages = 1,
+                    growMargin = pageH * 0.25f,
+                )
+                val pages = PageMetrics.pageCount(sheetH, pageH)
+                for (pageIndex in 1 until pages) {
+                    val y = pageIndex * pageH
+                    drawLine(
+                        color = Color(0x223B82F6),
+                        start = Offset(0f, y),
+                        end = Offset(size.width, y),
+                        strokeWidth = 2f,
+                    )
+                }
                 controller.strokes.forEachIndexed { i, s ->
                     drawInk(s)
                     if (i in controller.selected) {

@@ -44,6 +44,26 @@ class CanvasTransformTest {
         assertOffsetEquals(Offset(15f, -5f), panned.offset)
     }
 
+    @Test fun clampVerticalStopsScrollingAboveTop() {
+        // Pulled down (positive y) past the top -> clamped to 0.
+        val t = CanvasTransform(scale = 1f, offset = Offset(0f, 50f))
+        val c = t.clampVertical(viewportHeight = 1000f, sheetHeight = 3000f)
+        assertEquals(0f, c.offset.y, 0.001f)
+    }
+
+    @Test fun clampVerticalStopsScrollingBelowLastPage() {
+        // Scrolled up too far; min is viewport - scaledSheet = 1000 - 3000 = -2000.
+        val t = CanvasTransform(scale = 1f, offset = Offset(0f, -5000f))
+        val c = t.clampVertical(1000f, 3000f)
+        assertEquals(-2000f, c.offset.y, 0.001f)
+    }
+
+    @Test fun clampVerticalNoOpWhenSheetShorterThanViewport() {
+        val t = CanvasTransform(scale = 1f, offset = Offset(0f, -100f))
+        val c = t.clampVertical(2000f, 1000f)
+        assertEquals(0f, c.offset.y, 0.001f)
+    }
+
     private fun assertOffsetEquals(expected: Offset, actual: Offset) {
         assertEquals(expected.x, actual.x, 0.001f)
         assertEquals(expected.y, actual.y, 0.001f)
