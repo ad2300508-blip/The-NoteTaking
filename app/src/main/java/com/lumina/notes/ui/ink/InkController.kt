@@ -10,6 +10,7 @@ import com.lumina.notes.data.ink.InkSerializer
 import com.lumina.notes.data.ink.PenTool
 import com.lumina.notes.data.ink.Stroke
 import com.lumina.notes.data.ink.StrokePoint
+import com.lumina.notes.data.ink.StrokeSmoothing
 import kotlin.math.hypot
 
 /**
@@ -50,7 +51,9 @@ class InkController(initial: List<Stroke> = emptyList()) {
             return
         }
         val width = if (withTool == PenTool.HIGHLIGHTER) strokeWidth * 4f else strokeWidth
-        addStroke(Stroke(points, color, width, withTool))
+        // Smooth out S Pen sampling jitter for cleaner handwriting.
+        val shaped = StrokeSmoothing.smooth(points)
+        addStroke(Stroke(shaped, color, width, withTool))
     }
 
     private fun addStroke(stroke: Stroke) {
