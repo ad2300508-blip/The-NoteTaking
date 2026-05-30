@@ -282,6 +282,8 @@ private fun InkArea(
     var menuOpen by remember { mutableStateOf(false) }
     var zoom by remember { mutableFloatStateOf(1f) }
     var resetSignal by remember { mutableIntStateOf(0) }
+    var page by remember { mutableIntStateOf(1) }
+    var pageCount by remember { mutableIntStateOf(1) }
 
     // S Pen Air Actions: the side button toggles pen/eraser; a double click
     // switches to the highlighter. No-op on devices without the S Pen SDK.
@@ -310,6 +312,7 @@ private fun InkArea(
             modifier = Modifier.fillMaxSize(),
             resetZoomSignal = resetSignal,
             onZoomChange = { zoom = it },
+            onPageInfo = { current, total -> page = current; pageCount = total },
         )
 
         // Zoom badge + reset, shown only when the canvas is zoomed.
@@ -321,6 +324,24 @@ private fun InkArea(
                     .align(Alignment.TopEnd)
                     .padding(8.dp),
             )
+        }
+
+        // Page indicator, shown once the note spans more than one page.
+        if (pageCount > 1) {
+            androidx.compose.material3.Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 12.dp, bottom = 96.dp),
+            ) {
+                Text(
+                    "Pag. $page/$pageCount",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                )
+            }
         }
 
         // Paper-style picker (top-start overlay).

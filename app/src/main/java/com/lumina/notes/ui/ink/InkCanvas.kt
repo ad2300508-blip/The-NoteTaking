@@ -63,6 +63,7 @@ fun InkCanvas(
     modifier: Modifier = Modifier,
     resetZoomSignal: Int = 0,
     onZoomChange: (Float) -> Unit = {},
+    onPageInfo: (current: Int, total: Int) -> Unit = { _, _ -> },
 ) {
     var liveStroke by remember { mutableStateOf<List<StrokePoint>>(emptyList()) }
     var liveTool by remember { mutableStateOf(PenTool.PEN) }
@@ -254,6 +255,10 @@ fun InkCanvas(
                     growMargin = pageH * 0.25f,
                 )
                 val pages = PageMetrics.pageCount(sheetH, pageH)
+                // Report the page currently centered in the viewport.
+                val centerY = (-transform.offset.y + pageH / 2f) / transform.scale
+                val currentPage = (centerY / pageH).toInt().coerceIn(0, pages - 1) + 1
+                onPageInfo(currentPage, pages)
                 for (pageIndex in 1 until pages) {
                     val y = pageIndex * pageH
                     drawLine(
