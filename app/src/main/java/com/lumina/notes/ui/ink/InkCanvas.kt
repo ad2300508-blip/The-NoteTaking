@@ -89,9 +89,18 @@ fun InkCanvas(
                     val erasing = controller.tool == PenTool.ERASER || down.type == PointerType.Eraser
                     val drawTool =
                         if (down.type == PointerType.Eraser) PenTool.ERASER else controller.tool
+                    // With the lasso tool, dragging an existing selection moves it.
+                    val movingSelection = drawTool == PenTool.LASSO && controller.hasSelection
+                    var lastMovePos = transform.screenToCanvas(down.position)
                     val points = ArrayList<StrokePoint>()
 
                     fun drawAt(change: PointerInputChange) {
+                        if (movingSelection) {
+                            val now = transform.screenToCanvas(change.position)
+                            controller.moveSelected(now.x - lastMovePos.x, now.y - lastMovePos.y)
+                            lastMovePos = now
+                            return
+                        }
                         if (erasing) {
                             val r = eraserRadius / transform.scale
                             change.historical.forEach {
@@ -160,7 +169,7 @@ fun InkCanvas(
                         if (event.changes.none { it.pressed }) break
                     }
 
-                    if (mode == GestureMode.DRAW && !erasing) {
+                    if (mode == GestureMode.DRAW && !erasing && !movingSelection) {
                         if (drawTool == PenTool.LASSO) {
                             controller.applyLasso(points)
                             liveStroke = emptyList()

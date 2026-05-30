@@ -66,6 +66,16 @@ class InkController(initial: List<Stroke> = emptyList()) {
         revision++
     }
 
+    /** Translates the selected strokes by ([dx], [dy]) in canvas space. */
+    fun moveSelected(dx: Float, dy: Float) {
+        if (selected.isEmpty() || (dx == 0f && dy == 0f)) return
+        for (i in selected) {
+            if (i !in strokes.indices) continue
+            strokes[i] = strokes[i].translated(dx, dy)
+        }
+        revision++
+    }
+
     fun commitStroke(points: List<StrokePoint>, withTool: PenTool) {
         if (points.size < 2) {
             // A tap with the pen still leaves a dot.

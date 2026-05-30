@@ -32,6 +32,10 @@ data class Stroke(
 ) {
     val isEmpty: Boolean get() = points.isEmpty()
 
+    /** A copy translated by ([dx], [dy]); used when moving a selection. */
+    fun translated(dx: Float, dy: Float): Stroke =
+        copy(points = points.map { it.copy(x = it.x + dx, y = it.y + dy) })
+
     /** Axis-aligned bounds, used for fast hit-testing by the eraser. */
     fun bounds(): FloatArray {
         var minX = Float.MAX_VALUE
