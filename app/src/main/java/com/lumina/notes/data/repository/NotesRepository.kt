@@ -17,6 +17,9 @@ class NotesRepository(private val dao: NoteDao) {
     suspend fun save(note: NoteEntity) =
         dao.upsert(note.copy(updatedAt = System.currentTimeMillis()))
 
+    /** Re-inserts a note exactly as-is (e.g. undoing a delete) without bumping timestamps. */
+    suspend fun restore(note: NoteEntity) = dao.upsert(note)
+
     suspend fun delete(note: NoteEntity) = dao.delete(note)
 
     suspend fun deleteById(id: String) = dao.deleteById(id)
