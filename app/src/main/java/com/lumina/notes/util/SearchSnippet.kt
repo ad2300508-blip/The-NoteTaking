@@ -21,4 +21,22 @@ object SearchSnippet {
         val suffix = if (end < trimmed.length) "…" else ""
         return "$prefix$core$suffix"
     }
+
+    /**
+     * All [start, endExclusive) ranges where [query] occurs in [text]
+     * (case-insensitive, non-overlapping). Used to bold matches in previews.
+     */
+    fun matchRanges(text: String, query: String): List<IntRange> {
+        val q = query.trim()
+        if (q.isEmpty() || text.isEmpty()) return emptyList()
+        val ranges = ArrayList<IntRange>()
+        var from = 0
+        while (true) {
+            val idx = text.indexOf(q, from, ignoreCase = true)
+            if (idx < 0) break
+            ranges.add(idx until (idx + q.length))
+            from = idx + q.length
+        }
+        return ranges
+    }
 }

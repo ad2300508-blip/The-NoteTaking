@@ -36,6 +36,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -121,17 +124,28 @@ fun NoteCard(
                 }
             }
             if (note.preview.isNotBlank()) {
-                // When searching the body, show a snippet around the match.
-                val preview = remember(note.body, query) {
-                    if (query.isNotBlank() && note.body.contains(query, ignoreCase = true)) {
-                        SearchSnippet.of(note.body, query)
-                    } else {
-                        note.preview
+                // When searching the body, show a snippet around the match with
+                // the matched term bolded.
+                val searching = query.isNotBlank() && note.body.contains(query, ignoreCase = true)
+                val previewText = remember(note.body, note.preview, query) {
+                    if (searching) SearchSnippet.of(note.body, query) else note.preview
+                }
+                val annotated = remember(previewText, query) {
+                    if (query.isBlank()) AnnotatedString(previewText)
+                    else buildAnnotatedString {
+                        append(previewText)
+                        SearchSnippet.matchRanges(previewText, query).forEach { r ->
+                            addStyle(
+                                SpanStyle(fontWeight = FontWeight.Bold),
+                                r.first,
+                                r.last + 1,
+                            )
+                        }
                     }
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = preview,
+                    text = annotated,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 6,

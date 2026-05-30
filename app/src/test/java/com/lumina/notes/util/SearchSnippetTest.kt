@@ -32,4 +32,21 @@ class SearchSnippetTest {
         val snip = SearchSnippet.of("riga uno\nparola\nriga due", "parola", radius = 5)
         assertTrue(!snip.contains("\n"))
     }
+
+    @Test fun matchRangesFindsAllOccurrences() {
+        val ranges = SearchSnippet.matchRanges("abcABCabc", "abc")
+        assertEquals(3, ranges.size)
+        assertEquals(0 until 3, ranges[0])
+        assertEquals(3 until 6, ranges[1])
+        assertEquals(6 until 9, ranges[2])
+    }
+
+    @Test fun matchRangesEmptyWhenNoQuery() {
+        assertTrue(SearchSnippet.matchRanges("testo", "").isEmpty())
+    }
+
+    @Test fun matchRangesNonOverlapping() {
+        val ranges = SearchSnippet.matchRanges("aaaa", "aa")
+        assertEquals(2, ranges.size)
+    }
 }
