@@ -46,6 +46,14 @@ com.lumina.notes
 - **Persistenza**: Room (note) + DataStore (preferenze).
 - **DI**: service locator leggero (`AppContainer`) — nessun KAPT, solo KSP per Room.
 
+## 📦 Download dell'APK (Releases)
+
+Ogni push pubblica automaticamente un APK installabile nella sezione
+**[Releases](../../releases)** della repo (workflow `.github/workflows/release.yml`).
+Sul Galaxy Tab: abilita "installa app sconosciute" per il browser/file manager,
+scarica l'`.apk` dall'ultima release e aprilo. L'APK è *debug-signed* (per
+sideloading personale, non per il Play Store).
+
 ## 🚀 Build
 
 Requisiti: **Android Studio** (Ladybug+) con Android SDK (compileSdk 35), JDK 17+.
