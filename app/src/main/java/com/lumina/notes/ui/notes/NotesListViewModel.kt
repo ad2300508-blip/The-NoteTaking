@@ -107,10 +107,18 @@ class NotesListViewModel(
     }
     fun clearTagFilter() { activeTag.value = null }
 
-    /** Creates an empty note and returns its id so the UI can open it. */
+    /**
+     * Creates an empty note and returns its id so the UI can open it.
+     * Notes are handwriting-first: they open straight into ink mode on ruled
+     * paper, like a fresh page in a notebook.
+     */
     fun createNote(onCreated: (String) -> Unit) {
         viewModelScope.launch {
-            val note = NoteEntity(colorSeed = (0..6).random())
+            val note = NoteEntity(
+                colorSeed = (0..6).random(),
+                lastMode = 1, // ink
+                paperStyle = com.lumina.notes.data.ink.PaperStyle.LINES.ordinal,
+            )
             repo.save(note)
             onCreated(note.id)
         }

@@ -240,7 +240,7 @@ fun NotesListScreen(
         ExtendedFloatingActionButton(
             onClick = { viewModel.createNote(onOpenNote) },
             icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-            text = { Text("Nuova nota") },
+            text = { Text("Nuova pagina") },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(24.dp),
@@ -320,7 +320,7 @@ private fun EmptyState(
     val subtitle = when {
         query.isNotBlank() -> "Prova con un altro termine di ricerca"
         filtering -> "Rimuovi i filtri per vedere tutte le note"
-        else -> "Tocca + o usa la S Pen per iniziare a scrivere"
+        else -> "Tocca + e scrivi a mano con la S Pen, come su un quaderno"
     }
     Box(modifier, contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {

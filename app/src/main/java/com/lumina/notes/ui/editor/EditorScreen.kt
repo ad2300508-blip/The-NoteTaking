@@ -188,18 +188,19 @@ fun EditorScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            SegmentedButton(
-                selected = mode == EditorMode.TEXT,
-                onClick = { mode = EditorMode.TEXT; viewModel.setLastMode(0) },
-                shape = SegmentedButtonDefaults.itemShape(0, 2),
-                icon = { Icon(Icons.Filled.Notes, contentDescription = null) },
-            ) { Text("Testo") }
+            // Handwriting-first: ink is the primary mode, typing is secondary.
             SegmentedButton(
                 selected = mode == EditorMode.INK,
                 onClick = { mode = EditorMode.INK; viewModel.setLastMode(1) },
-                shape = SegmentedButtonDefaults.itemShape(1, 2),
+                shape = SegmentedButtonDefaults.itemShape(0, 2),
                 icon = { Icon(Icons.Filled.Draw, contentDescription = null) },
-            ) { Text("Inchiostro") }
+            ) { Text("Scrittura") }
+            SegmentedButton(
+                selected = mode == EditorMode.TEXT,
+                onClick = { mode = EditorMode.TEXT; viewModel.setLastMode(0) },
+                shape = SegmentedButtonDefaults.itemShape(1, 2),
+                icon = { Icon(Icons.Filled.Notes, contentDescription = null) },
+            ) { Text("Tastiera") }
         }
 
         Box(Modifier.fillMaxSize()) {
