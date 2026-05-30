@@ -73,6 +73,21 @@ fun SettingsScreen(
             )
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
+            SectionTitle("Libreria")
+            val stats by viewModel.libraryStats.collectAsState()
+            Text(
+                stats.summary(),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            )
+            Text(
+                "${stats.favorites} preferite · ${stats.pinned} fissate",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
             SectionTitle("Info")
             Text(
                 "Lumina • Note per Galaxy Tab S10 Ultra\n" +

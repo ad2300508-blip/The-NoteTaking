@@ -38,7 +38,9 @@ fun editorViewModel(noteId: String): EditorViewModel {
 fun settingsViewModel(): SettingsViewModel {
     val container = appContainer()
     return viewModel(factory = viewModelFactory {
-        initializer { SettingsViewModel(container.settingsRepository) }
+        initializer {
+            SettingsViewModel(container.settingsRepository, container.notesRepository)
+        }
     })
 }
 
