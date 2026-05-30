@@ -12,9 +12,11 @@ on:
 permissions:
   contents: write
 
+# Don't cancel an in-flight release when another push arrives — let each
+# build finish so the APK actually gets published. Runs queue instead.
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   release:
