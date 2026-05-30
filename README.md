@@ -1,5 +1,7 @@
 # Lumina ✍️ — Note per Galaxy Tab S10 Ultra
 
+[![Releases](https://img.shields.io/github/v/release/ad2300508-blip/The-NoteTaking?label=APK&sort=semver)](https://github.com/ad2300508-blip/The-NoteTaking/releases/latest)
+
 App di note Android **nativa**, pensata e ottimizzata per il **Samsung Galaxy Tab S10 Ultra**:
 schermo grande, alte frequenze di aggiornamento e **S Pen** come cittadini di prima classe.
 
@@ -53,6 +55,8 @@ Ogni push pubblica automaticamente un APK installabile nella sezione
 Sul Galaxy Tab: abilita "installa app sconosciute" per il browser/file manager,
 scarica l'`.apk` dall'ultima release e aprilo. L'APK è *debug-signed* (per
 sideloading personale, non per il Play Store).
+
+📖 Guida passo-passo (download, `adb` via USB, S Pen, troubleshooting): **[INSTALL.md](INSTALL.md)**.
 
 ## 🚀 Build
 
