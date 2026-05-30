@@ -125,7 +125,13 @@ fun InkToolbar(
                     Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = "Ripeti")
                 }
                 IconButton(
-                    onClick = { tap(); controller.straightenLastStroke() },
+                    onClick = {
+                        val recognized = controller.straightenLastStroke()
+                        haptics.performHapticFeedback(
+                            if (recognized != null) HapticFeedbackType.LongPress
+                            else HapticFeedbackType.TextHandleMove
+                        )
+                    },
                     enabled = controller.strokes.isNotEmpty(),
                 ) {
                     Icon(Icons.Filled.AutoFixHigh, contentDescription = "Raddrizza forma")
