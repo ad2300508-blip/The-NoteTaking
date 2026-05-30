@@ -100,8 +100,9 @@ fun NoteCard(
                         .background(accent)
                 )
                 Spacer(Modifier.size(8.dp))
+                val titleText = note.title.ifBlank { "Senza titolo" }
                 Text(
-                    text = note.title.ifBlank { "Senza titolo" },
+                    text = highlight(titleText, query),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
@@ -130,22 +131,9 @@ fun NoteCard(
                 val previewText = remember(note.body, note.preview, query) {
                     if (searching) SearchSnippet.of(note.body, query) else note.preview
                 }
-                val annotated = remember(previewText, query) {
-                    if (query.isBlank()) AnnotatedString(previewText)
-                    else buildAnnotatedString {
-                        append(previewText)
-                        SearchSnippet.matchRanges(previewText, query).forEach { r ->
-                            addStyle(
-                                SpanStyle(fontWeight = FontWeight.Bold),
-                                r.first,
-                                r.last + 1,
-                            )
-                        }
-                    }
-                }
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = annotated,
+                    text = highlight(previewText, query),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 6,
@@ -231,6 +219,17 @@ private fun NoteContextMenu(
             leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null) },
             onClick = { onDelete(); onDismiss() },
         )
+    }
+}
+
+/** Bolds every occurrence of [query] within [text]; plain text when no query. */
+private fun highlight(text: String, query: String): AnnotatedString {
+    if (query.isBlank()) return AnnotatedString(text)
+    return buildAnnotatedString {
+        append(text)
+        SearchSnippet.matchRanges(text, query).forEach { r ->
+            addStyle(SpanStyle(fontWeight = FontWeight.Bold), r.first, r.last + 1)
+        }
     }
 }
 
