@@ -11,11 +11,13 @@ data class StrokePoint(
     val offset: Offset get() = Offset(x, y)
 }
 
-/** The drawing tool that produced a stroke. */
+/** The active editor tool. PEN/HIGHLIGHTER/ERASER produce ink; LASSO selects.
+ *  Order is append-only: ordinals are persisted in serialized strokes. */
 enum class PenTool {
     PEN,
     HIGHLIGHTER,
-    ERASER;
+    ERASER,
+    LASSO;
 }
 
 /**

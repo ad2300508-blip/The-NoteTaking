@@ -21,7 +21,9 @@ import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material.icons.filled.Highlight
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
@@ -93,6 +95,9 @@ fun InkToolbar(
                 ToolButton(Icons.Filled.Brush, "Gomma", controller.tool == PenTool.ERASER) {
                     tap(); controller.selectTool(PenTool.ERASER)
                 }
+                ToolButton(Icons.Filled.Gesture, "Seleziona", controller.tool == PenTool.LASSO) {
+                    tap(); controller.selectTool(PenTool.LASSO)
+                }
 
                 Spacer(Modifier.width(8.dp))
 
@@ -120,6 +125,15 @@ fun InkToolbar(
                 }
                 IconButton(onClick = { confirmClear = true }, enabled = controller.canUndo) {
                     Icon(Icons.Filled.Delete, contentDescription = "Cancella tutto")
+                }
+                if (controller.hasSelection) {
+                    IconButton(onClick = { controller.deleteSelected() }) {
+                        Icon(
+                            Icons.Filled.DeleteSweep,
+                            contentDescription = "Elimina selezione",
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    }
                 }
                 IconButton(onClick = onExportPng, enabled = controller.canUndo) {
                     Icon(Icons.Filled.Share, contentDescription = "Condividi disegno")

@@ -19,6 +19,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -65,6 +66,8 @@ fun InkCanvas(
     var transform by remember { mutableStateOf(CanvasTransform()) }
     // Where the S Pen is hovering (no contact yet), in screen space, or null.
     var hover by remember { mutableStateOf<Offset?>(null) }
+    // The in-progress lasso outline, in screen space.
+    var lassoPath by remember { mutableStateOf<List<Offset>>(emptyList()) }
     val eraserRadius = with(LocalDensity.current) { 16.dp.toPx() }
     val haptics = LocalHapticFeedback.current
 
@@ -104,8 +107,12 @@ fun InkCanvas(
                             }
                             val p = transform.screenToCanvas(change.position)
                             points.add(StrokePoint(p.x, p.y, sanitize(change.pressure)))
-                            liveStroke = ArrayList(points)
-                            liveTool = drawTool
+                            if (drawTool == PenTool.LASSO) {
+                                lassoPath = points.map { transform.canvasToScreen(it.offset) }
+                            } else {
+                                liveStroke = ArrayList(points)
+                                liveTool = drawTool
+                            }
                         }
                     }
 
@@ -154,9 +161,18 @@ fun InkCanvas(
                     }
 
                     if (mode == GestureMode.DRAW && !erasing) {
-                        controller.commitStroke(points, drawTool)
-                        liveStroke = emptyList()
-                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        if (drawTool == PenTool.LASSO) {
+                            controller.applyLasso(points)
+                            liveStroke = emptyList()
+                            lassoPath = emptyList()
+                            if (controller.hasSelection) {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            }
+                        } else {
+                            controller.commitStroke(points, drawTool)
+                            liveStroke = emptyList()
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        }
                     }
                 }
             }
@@ -189,7 +205,13 @@ fun InkCanvas(
                 translate(transform.offset.x, transform.offset.y)
                 scale(transform.scale, transform.scale, pivot = Offset.Zero)
             }) {
-                controller.strokes.forEach { drawInk(it) }
+                controller.strokes.forEachIndexed { i, s ->
+                    drawInk(s)
+                    if (i in controller.selected) {
+                        // Tint selected strokes by overlaying a translucent pass.
+                        drawInk(s.copy(color = 0x553B82F6L))
+                    }
+                }
                 if (liveStroke.size >= 2) {
                     drawInk(
                         Stroke(
@@ -202,6 +224,24 @@ fun InkCanvas(
                     )
                 }
             }
+            // Lasso outline (screen space): a dashed selection marquee.
+            if (lassoPath.size >= 2) {
+                val path = Path().apply {
+                    moveTo(lassoPath[0].x, lassoPath[0].y)
+                    for (k in 1 until lassoPath.size) lineTo(lassoPath[k].x, lassoPath[k].y)
+                }
+                drawPath(
+                    path = path,
+                    color = Color(0xFF3B82F6),
+                    style = StrokeStyle(
+                        width = 2.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(
+                            floatArrayOf(12f, 10f), 0f
+                        ),
+                    ),
+                )
+            }
+
             // Hover indicator (screen space): a ring at the pen tip, tinted with
             // the current ink color, so you can aim before touching down.
             hover?.let { h ->
