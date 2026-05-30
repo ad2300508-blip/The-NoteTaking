@@ -80,8 +80,13 @@ fun EditorScreen(
     val body by viewModel.body.collectAsState()
     val isPinned by viewModel.isPinned.collectAsState()
     val isFavorite by viewModel.isFavorite.collectAsState()
+    val lastMode by viewModel.lastMode.collectAsState()
 
     var mode by remember { mutableStateOf(EditorMode.TEXT) }
+    // Restore the remembered editor mode once the note has loaded.
+    androidx.compose.runtime.LaunchedEffect(lastMode) {
+        mode = if (lastMode == 1) EditorMode.INK else EditorMode.TEXT
+    }
     var showColorPicker by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -185,13 +190,13 @@ fun EditorScreen(
         ) {
             SegmentedButton(
                 selected = mode == EditorMode.TEXT,
-                onClick = { mode = EditorMode.TEXT },
+                onClick = { mode = EditorMode.TEXT; viewModel.setLastMode(0) },
                 shape = SegmentedButtonDefaults.itemShape(0, 2),
                 icon = { Icon(Icons.Filled.Notes, contentDescription = null) },
             ) { Text("Testo") }
             SegmentedButton(
                 selected = mode == EditorMode.INK,
-                onClick = { mode = EditorMode.INK },
+                onClick = { mode = EditorMode.INK; viewModel.setLastMode(1) },
                 shape = SegmentedButtonDefaults.itemShape(1, 2),
                 icon = { Icon(Icons.Filled.Draw, contentDescription = null) },
             ) { Text("Inchiostro") }

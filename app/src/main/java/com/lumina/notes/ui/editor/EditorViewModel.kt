@@ -41,6 +41,10 @@ class EditorViewModel(
     private val _tags = MutableStateFlow<List<String>>(emptyList())
     val tags: StateFlow<List<String>> = _tags.asStateFlow()
 
+    /** 0 = text, 1 = ink. Restored from the note; persisted on change. */
+    private val _lastMode = MutableStateFlow(0)
+    val lastMode: StateFlow<Int> = _lastMode.asStateFlow()
+
     val ink = InkController()
 
     private var loaded: NoteEntity? = null
@@ -57,6 +61,7 @@ class EditorViewModel(
                 _isPinned.value = note.isPinned
                 _isFavorite.value = note.isFavorite
                 _tags.value = TagsCodec.decode(note.tags)
+                _lastMode.value = note.lastMode
                 InkSerializer.decode(note.inkJson).let { strokes ->
                     ink.strokes.clear()
                     ink.strokes.addAll(strokes)
@@ -104,6 +109,12 @@ class EditorViewModel(
         viewModelScope.launch { persist() }
     }
 
+    fun setLastMode(mode: Int) {
+        if (_lastMode.value == mode) return
+        _lastMode.value = mode
+        viewModelScope.launch { persist() }
+    }
+
     suspend fun persist() {
         val base = loaded ?: NoteEntity(id = noteId)
         val updated = base.copy(
@@ -113,6 +124,7 @@ class EditorViewModel(
             colorSeed = _colorSeed.value,
             paperStyle = _paperStyle.value,
             tags = TagsCodec.encode(_tags.value),
+            lastMode = _lastMode.value,
             isPinned = _isPinned.value,
             isFavorite = _isFavorite.value,
         )
