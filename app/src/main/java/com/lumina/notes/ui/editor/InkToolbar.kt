@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Highlight
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -54,6 +56,25 @@ fun InkToolbar(
     val haptics = LocalHapticFeedback.current
     fun tap() = haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
     var hue by remember { mutableFloatStateOf(210f) }
+    var confirmClear by remember { mutableStateOf(false) }
+
+    if (confirmClear) {
+        AlertDialog(
+            onDismissRequest = { confirmClear = false },
+            title = { androidx.compose.material3.Text("Cancellare il disegno?") },
+            text = { androidx.compose.material3.Text("Tutti i tratti verranno rimossi. Puoi comunque annullare con la freccia indietro.") },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    controller.clear(); confirmClear = false
+                }) { androidx.compose.material3.Text("Cancella") }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { confirmClear = false }) {
+                    androidx.compose.material3.Text("Annulla")
+                }
+            },
+        )
+    }
 
     Surface(
         modifier = modifier,
@@ -97,7 +118,7 @@ fun InkToolbar(
                 IconButton(onClick = controller::redo, enabled = controller.canRedo) {
                     Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = "Ripeti")
                 }
-                IconButton(onClick = controller::clear, enabled = controller.canUndo) {
+                IconButton(onClick = { confirmClear = true }, enabled = controller.canUndo) {
                     Icon(Icons.Filled.Delete, contentDescription = "Cancella tutto")
                 }
                 IconButton(onClick = onExportPng, enabled = controller.canUndo) {
