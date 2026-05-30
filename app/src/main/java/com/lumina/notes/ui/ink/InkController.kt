@@ -21,7 +21,19 @@ import kotlin.math.hypot
 class InkController(initial: List<Stroke> = emptyList()) {
 
     val strokes: SnapshotStateList<Stroke> = mutableStateListOf<Stroke>().apply { addAll(initial) }
-    private val redoStack = ArrayDeque<Stroke>()
+
+    // Snapshot-based history so undo/redo covers every mutation — drawing,
+    // erasing, lasso delete and lasso move — not just the last stroke.
+    private val undoStack = ArrayDeque<List<Stroke>>()
+    private val redoStack = ArrayDeque<List<Stroke>>()
+    private val maxHistory = 50
+
+    /** Records the current strokes as a restore point before a mutation. */
+    private fun pushHistory() {
+        undoStack.addLast(strokes.toList())
+        if (undoStack.size > maxHistory) undoStack.removeFirst()
+        redoStack.clear()
+    }
 
     var tool by mutableStateOf(PenTool.PEN)
         private set
@@ -37,7 +49,7 @@ class InkController(initial: List<Stroke> = emptyList()) {
     /** Indices of strokes currently lasso-selected (highlighted, deletable). */
     val selected: SnapshotStateList<Int> = mutableStateListOf()
 
-    val canUndo: Boolean get() = strokes.isNotEmpty()
+    val canUndo: Boolean get() = undoStack.isNotEmpty()
     val canRedo: Boolean get() = redoStack.isNotEmpty()
     val hasSelection: Boolean get() = selected.isNotEmpty()
 
@@ -59,16 +71,21 @@ class InkController(initial: List<Stroke> = emptyList()) {
     /** Removes the lasso-selected strokes. */
     fun deleteSelected() {
         if (selected.isEmpty()) return
+        pushHistory()
         val toRemove = selected.toList().sortedDescending()
         for (i in toRemove) if (i in strokes.indices) strokes.removeAt(i)
         selected.clear()
-        redoStack.clear()
         revision++
     }
 
-    /** Translates the selected strokes by ([dx], [dy]) in canvas space. */
-    fun moveSelected(dx: Float, dy: Float) {
+    /**
+     * Translates the selected strokes by ([dx], [dy]) in canvas space.
+     * [record] should be true only on the first move of a drag gesture, so a
+     * whole drag is one undo step rather than one per pointer sample.
+     */
+    fun moveSelected(dx: Float, dy: Float, record: Boolean = true) {
         if (selected.isEmpty() || (dx == 0f && dy == 0f)) return
+        if (record) pushHistory()
         for (i in selected) {
             if (i !in strokes.indices) continue
             strokes[i] = strokes[i].translated(dx, dy)
@@ -92,46 +109,43 @@ class InkController(initial: List<Stroke> = emptyList()) {
     }
 
     private fun addStroke(stroke: Stroke) {
+        pushHistory()
         strokes.add(stroke)
-        redoStack.clear()
         revision++
     }
 
     /** Removes any stroke passing within [radius] of [x],[y] (stroke eraser). */
     fun eraseAt(x: Float, y: Float, radius: Float) {
-        var changed = false
-        val it = strokes.listIterator(strokes.size)
-        while (it.hasPrevious()) {
-            val s = it.previous()
-            if (strokeHit(s, x, y, radius)) {
-                strokes.remove(s)
-                changed = true
-            }
-        }
-        if (changed) {
-            redoStack.clear()
-            revision++
-        }
+        val toRemove = strokes.filter { strokeHit(it, x, y, radius) }
+        if (toRemove.isEmpty()) return
+        pushHistory()
+        strokes.removeAll(toRemove)
+        revision++
     }
 
     fun undo() {
-        if (strokes.isNotEmpty()) {
-            redoStack.addLast(strokes.removeAt(strokes.lastIndex))
-            revision++
-        }
+        val prev = undoStack.removeLastOrNull() ?: return
+        redoStack.addLast(strokes.toList())
+        strokes.clear()
+        strokes.addAll(prev)
+        selected.clear()
+        revision++
     }
 
     fun redo() {
-        redoStack.removeLastOrNull()?.let {
-            strokes.add(it)
-            revision++
-        }
+        val next = redoStack.removeLastOrNull() ?: return
+        undoStack.addLast(strokes.toList())
+        strokes.clear()
+        strokes.addAll(next)
+        selected.clear()
+        revision++
     }
 
     fun clear() {
         if (strokes.isNotEmpty()) {
+            pushHistory()
             strokes.clear()
-            redoStack.clear()
+            selected.clear()
             revision++
         }
     }

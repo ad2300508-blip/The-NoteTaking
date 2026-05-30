@@ -92,12 +92,17 @@ fun InkCanvas(
                     // With the lasso tool, dragging an existing selection moves it.
                     val movingSelection = drawTool == PenTool.LASSO && controller.hasSelection
                     var lastMovePos = transform.screenToCanvas(down.position)
+                    var firstMove = true
                     val points = ArrayList<StrokePoint>()
 
                     fun drawAt(change: PointerInputChange) {
                         if (movingSelection) {
                             val now = transform.screenToCanvas(change.position)
-                            controller.moveSelected(now.x - lastMovePos.x, now.y - lastMovePos.y)
+                            controller.moveSelected(
+                                now.x - lastMovePos.x, now.y - lastMovePos.y,
+                                record = firstMove,
+                            )
+                            firstMove = false
                             lastMovePos = now
                             return
                         }

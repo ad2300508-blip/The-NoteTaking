@@ -56,13 +56,40 @@ class InkControllerTest {
         assertFalse(c.canRedo)
     }
 
-    @Test fun clearRemovesEverything() {
+    @Test fun clearRemovesEverythingButIsUndoable() {
         val c = InkController()
         c.commitStroke(line(), PenTool.PEN)
         c.commitStroke(line(), PenTool.PEN)
         c.clear()
         assertEquals(0, c.strokes.size)
-        assertFalse(c.canUndo)
+        // Clear is a recorded step, so it can be undone.
+        assertTrue(c.canUndo)
+        c.undo()
+        assertEquals(2, c.strokes.size)
+    }
+
+    @Test fun undoRestoresAfterErase() {
+        val c = InkController()
+        c.commitStroke(line(), PenTool.PEN)
+        c.eraseAt(10f, 10f, radius = 5f)
+        assertEquals(0, c.strokes.size)
+        c.undo()
+        assertEquals(1, c.strokes.size)
+    }
+
+    @Test fun undoRestoresDeletedSelection() {
+        val c = InkController()
+        c.commitStroke(line(), PenTool.PEN)
+        c.applyLasso(
+            listOf(
+                StrokePoint(-5f, -5f), StrokePoint(25f, -5f),
+                StrokePoint(25f, 25f), StrokePoint(-5f, 25f),
+            )
+        )
+        c.deleteSelected()
+        assertEquals(0, c.strokes.size)
+        c.undo()
+        assertEquals(1, c.strokes.size)
     }
 
     @Test fun eraseRemovesNearbyStroke() {
