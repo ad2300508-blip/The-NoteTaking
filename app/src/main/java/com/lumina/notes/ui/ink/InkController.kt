@@ -34,12 +34,37 @@ class InkController(initial: List<Stroke> = emptyList()) {
     var revision by mutableLongStateOf(0L)
         private set
 
+    /** Indices of strokes currently lasso-selected (highlighted, deletable). */
+    val selected: SnapshotStateList<Int> = mutableStateListOf()
+
     val canUndo: Boolean get() = strokes.isNotEmpty()
     val canRedo: Boolean get() = redoStack.isNotEmpty()
+    val hasSelection: Boolean get() = selected.isNotEmpty()
 
-    fun selectTool(t: PenTool) { tool = t }
+    fun selectTool(t: PenTool) { tool = t; clearSelection() }
     fun selectColor(c: Long) { color = c }
     fun setWidth(w: Float) { strokeWidth = w }
+
+    /** Selects strokes enclosed by a lasso [polygon] (canvas-space points). */
+    fun applyLasso(polygon: List<StrokePoint>) {
+        val hits = com.lumina.notes.data.ink.LassoSelection.selectedIndices(strokes, polygon)
+        selected.clear()
+        selected.addAll(hits)
+    }
+
+    fun clearSelection() {
+        if (selected.isNotEmpty()) selected.clear()
+    }
+
+    /** Removes the lasso-selected strokes. */
+    fun deleteSelected() {
+        if (selected.isEmpty()) return
+        val toRemove = selected.toList().sortedDescending()
+        for (i in toRemove) if (i in strokes.indices) strokes.removeAt(i)
+        selected.clear()
+        redoStack.clear()
+        revision++
+    }
 
     fun commitStroke(points: List<StrokePoint>, withTool: PenTool) {
         if (points.size < 2) {
