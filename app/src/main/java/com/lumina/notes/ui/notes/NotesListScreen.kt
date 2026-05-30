@@ -91,11 +91,21 @@ fun NotesListScreen(
                     Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        "Lumina",
-                        style = MaterialTheme.typography.displaySmall,
-                        modifier = Modifier.weight(1f),
-                    )
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "Lumina",
+                            style = MaterialTheme.typography.displaySmall,
+                        )
+                        if (!state.loading) {
+                            val count = state.notes.size
+                            val label = if (count == 1) "1 nota" else "$count note"
+                            Text(
+                                if (state.activeTag != null) "$label · #${state.activeTag}" else label,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                     Box {
                         IconButton(onClick = { sortMenuOpen = true }) {
                             Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Ordina")
@@ -178,7 +188,12 @@ fun NotesListScreen(
             }
 
             if (!state.loading && state.notes.isEmpty()) {
-                EmptyState(query = state.query, Modifier.fillMaxSize())
+                EmptyState(
+                    query = state.query,
+                    activeTag = state.activeTag,
+                    filter = state.filter,
+                    modifier = Modifier.fillMaxSize(),
+                )
             } else {
                 LazyVerticalStaggeredGrid(
                     columns = StaggeredGridCells.Fixed(columns),
@@ -281,7 +296,26 @@ private fun SwipeToDeleteNote(
 }
 
 @Composable
-private fun EmptyState(query: String, modifier: Modifier = Modifier) {
+private fun EmptyState(
+    query: String,
+    activeTag: String?,
+    filter: NoteFilter,
+    modifier: Modifier = Modifier,
+) {
+    // The empty state explains *why* it's empty, given the active query/tag/filter.
+    val filtering = query.isNotBlank() || activeTag != null || filter != NoteFilter.ALL
+    val title = when {
+        query.isNotBlank() -> "Nessun risultato"
+        activeTag != null -> "Nessuna nota con #$activeTag"
+        filter == NoteFilter.FAVORITES -> "Nessun preferito"
+        filter == NoteFilter.PINNED -> "Nessuna nota fissata"
+        else -> "Nessuna nota"
+    }
+    val subtitle = when {
+        query.isNotBlank() -> "Prova con un altro termine di ricerca"
+        filtering -> "Rimuovi i filtri per vedere tutte le note"
+        else -> "Tocca + o usa la S Pen per iniziare a scrivere"
+    }
     Box(modifier, contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
@@ -291,14 +325,10 @@ private fun EmptyState(query: String, modifier: Modifier = Modifier) {
                 modifier = Modifier.height(72.dp),
             )
             Spacer(Modifier.height(12.dp))
-            Text(
-                if (query.isBlank()) "Nessuna nota" else "Nessun risultato",
-                style = MaterialTheme.typography.titleLarge,
-            )
+            Text(title, style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(6.dp))
             Text(
-                if (query.isBlank()) "Tocca + o usa la S Pen per iniziare a scrivere"
-                else "Prova con un altro termine di ricerca",
+                subtitle,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
