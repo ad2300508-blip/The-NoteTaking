@@ -39,6 +39,7 @@ import com.lumina.notes.data.ink.DoubleTapDetector
 import com.lumina.notes.data.ink.NibWidth
 import com.lumina.notes.data.ink.PageMetrics
 import com.lumina.notes.data.ink.PenTool
+import com.lumina.notes.data.ink.ScribbleDetector
 import com.lumina.notes.data.ink.Stroke
 import com.lumina.notes.data.ink.StrokePoint
 import com.lumina.notes.data.ink.TiltShading
@@ -226,6 +227,13 @@ fun InkCanvas(
                                     if (controller.tool == PenTool.ERASER) PenTool.PEN
                                     else PenTool.ERASER
                                 )
+                                liveStroke = emptyList()
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            } else if (drawTool == PenTool.PEN &&
+                                ScribbleDetector.isScribble(points)
+                            ) {
+                                // Cross-out scribble: erase strokes under it.
+                                controller.eraseStrokesIn(points)
                                 liveStroke = emptyList()
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                             } else {

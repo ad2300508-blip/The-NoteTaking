@@ -68,6 +68,35 @@ class InkController(initial: List<Stroke> = emptyList()) {
         if (selected.isNotEmpty()) selected.clear()
     }
 
+    /**
+     * Erases strokes overlapping a cross-out [scribble] path: any stroke with a
+     * point within [radius] of the scribble is removed. One undo step.
+     */
+    fun eraseStrokesIn(scribble: List<StrokePoint>, radius: Float = 18f) {
+        if (scribble.size < 2) return
+        // Scribble bounds (with margin) for a cheap first reject.
+        var minX = Float.MAX_VALUE; var minY = Float.MAX_VALUE
+        var maxX = -Float.MAX_VALUE; var maxY = -Float.MAX_VALUE
+        for (p in scribble) {
+            if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x
+            if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y
+        }
+        val toRemove = strokes.filter { s ->
+            val b = s.bounds()
+            if (b[2] < minX - radius || b[0] > maxX + radius ||
+                b[3] < minY - radius || b[1] > maxY + radius
+            ) return@filter false
+            s.points.any { sp ->
+                scribble.any { hypot(sp.x - it.x, sp.y - it.y) <= radius }
+            }
+        }
+        if (toRemove.isEmpty()) return
+        pushHistory()
+        strokes.removeAll(toRemove)
+        selected.clear()
+        revision++
+    }
+
     /** Removes the lasso-selected strokes. */
     fun deleteSelected() {
         if (selected.isEmpty()) return
