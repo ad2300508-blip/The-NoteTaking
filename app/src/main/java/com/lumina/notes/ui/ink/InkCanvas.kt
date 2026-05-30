@@ -31,6 +31,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import com.lumina.notes.data.ink.NibWidth
 import com.lumina.notes.data.ink.PenTool
 import com.lumina.notes.data.ink.Stroke
 import com.lumina.notes.data.ink.StrokePoint
@@ -205,12 +206,14 @@ private fun DrawScope.drawInk(stroke: Stroke) {
             )
         }
         else -> {
-            // Pressure-tapered: width follows pen pressure for a natural line.
+            // Fountain-pen nib: width follows both pressure and speed, so the
+            // line swells on slow, firm strokes and tapers on quick ones.
             for (i in 1 until pts.size) {
                 val a = pts[i - 1]
                 val b = pts[i]
-                val pressure = ((a.pressure + b.pressure) * 0.5f)
-                val w = stroke.baseWidth * (0.35f + 0.65f * pressure)
+                val pressure = (a.pressure + b.pressure) * 0.5f
+                val dist = NibWidth.distance(a.x, a.y, b.x, b.y)
+                val w = NibWidth.of(stroke.baseWidth, pressure, dist)
                 drawLine(
                     color = color,
                     start = Offset(a.x, a.y),
