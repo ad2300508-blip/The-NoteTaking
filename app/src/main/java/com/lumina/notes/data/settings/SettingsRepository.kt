@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -16,6 +17,12 @@ data class AppSettings(
     val palmRejection: Boolean = true,
 )
 
+/** Persisted notes-list view preferences (sort order + filter). */
+data class ViewPreferences(
+    val sortOrdinal: Int = 0,
+    val filterOrdinal: Int = 0,
+)
+
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 class SettingsRepository(private val context: Context) {
@@ -25,6 +32,8 @@ class SettingsRepository(private val context: Context) {
         val DARK = booleanPreferencesKey("dark_theme")
         val DARK_SET = booleanPreferencesKey("dark_theme_set")
         val PALM = booleanPreferencesKey("palm_rejection")
+        val SORT = intPreferencesKey("notes_sort")
+        val FILTER = intPreferencesKey("notes_filter")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -34,6 +43,19 @@ class SettingsRepository(private val context: Context) {
             palmRejection = p[Keys.PALM] ?: true,
         )
     }
+
+    val viewPreferences: Flow<ViewPreferences> = context.dataStore.data.map { p ->
+        ViewPreferences(
+            sortOrdinal = p[Keys.SORT] ?: 0,
+            filterOrdinal = p[Keys.FILTER] ?: 0,
+        )
+    }
+
+    suspend fun setSort(ordinal: Int) =
+        context.dataStore.edit { it[Keys.SORT] = ordinal }.let {}
+
+    suspend fun setFilter(ordinal: Int) =
+        context.dataStore.edit { it[Keys.FILTER] = ordinal }.let {}
 
     suspend fun setDynamicColor(value: Boolean) =
         context.dataStore.edit { it[Keys.DYNAMIC] = value }.let {}

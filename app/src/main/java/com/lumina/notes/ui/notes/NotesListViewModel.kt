@@ -4,11 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lumina.notes.data.local.NoteEntity
 import com.lumina.notes.data.repository.NotesRepository
+import com.lumina.notes.data.settings.SettingsRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -37,7 +39,10 @@ data class NotesUiState(
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class NotesListViewModel(private val repo: NotesRepository) : ViewModel() {
+class NotesListViewModel(
+    private val repo: NotesRepository,
+    private val settings: SettingsRepository,
+) : ViewModel() {
 
     private val query = MutableStateFlow("")
     private val filter = MutableStateFlow(NoteFilter.ALL)
@@ -46,6 +51,15 @@ class NotesListViewModel(private val repo: NotesRepository) : ViewModel() {
 
     /** A note awaiting a possible undo after a swipe-delete. */
     private var pendingDelete: NoteEntity? = null
+
+    init {
+        // Restore persisted view preferences (sort + filter) on first load.
+        viewModelScope.launch {
+            val prefs = settings.viewPreferences.first()
+            sort.value = NoteSort.entries.getOrElse(prefs.sortOrdinal) { NoteSort.UPDATED }
+            filter.value = NoteFilter.entries.getOrElse(prefs.filterOrdinal) { NoteFilter.ALL }
+        }
+    }
 
     val state: StateFlow<NotesUiState> =
         combine(
@@ -76,8 +90,16 @@ class NotesListViewModel(private val repo: NotesRepository) : ViewModel() {
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NotesUiState())
 
     fun onQueryChange(value: String) { query.value = value }
-    fun onFilterChange(value: NoteFilter) { filter.value = value }
-    fun onSortChange(value: NoteSort) { sort.value = value }
+
+    fun onFilterChange(value: NoteFilter) {
+        filter.value = value
+        viewModelScope.launch { settings.setFilter(value.ordinal) }
+    }
+
+    fun onSortChange(value: NoteSort) {
+        sort.value = value
+        viewModelScope.launch { settings.setSort(value.ordinal) }
+    }
 
     /** Toggles a tag filter; selecting the active tag again clears it. */
     fun onTagClick(tag: String) {

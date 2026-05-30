@@ -20,7 +20,9 @@ fun appContainer(): AppContainer =
 fun notesListViewModel(): NotesListViewModel {
     val container = appContainer()
     return viewModel(factory = viewModelFactory {
-        initializer { NotesListViewModel(container.notesRepository) }
+        initializer {
+            NotesListViewModel(container.notesRepository, container.settingsRepository)
+        }
     })
 }
 
