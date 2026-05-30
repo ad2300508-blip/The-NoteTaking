@@ -7,15 +7,17 @@ import com.lumina.notes.data.settings.AppSettings
 import com.lumina.notes.data.settings.SettingsRepository
 import com.lumina.notes.util.LibraryStats
 import com.lumina.notes.util.LibraryStatsCalculator
+import com.lumina.notes.util.NotesExporter
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val repo: SettingsRepository,
-    notesRepo: NotesRepository,
+    private val notesRepo: NotesRepository,
 ) : ViewModel() {
 
     val state: StateFlow<AppSettings> =
@@ -34,4 +36,12 @@ class SettingsViewModel(
     fun setDarkTheme(value: Boolean?) = viewModelScope.launch { repo.setDarkTheme(value) }
     fun setPalmRejection(value: Boolean) = viewModelScope.launch { repo.setPalmRejection(value) }
     fun setFontScale(value: Float) = viewModelScope.launch { repo.setFontScale(value) }
+
+    /** Builds a Markdown export of all notes and hands it to [onReady]. */
+    fun exportAll(onReady: (fileName: String, content: String) -> Unit) {
+        viewModelScope.launch {
+            val notes = notesRepo.observeNotes().first()
+            onReady(NotesExporter.fileName(), NotesExporter.toMarkdown(notes))
+        }
+    }
 }

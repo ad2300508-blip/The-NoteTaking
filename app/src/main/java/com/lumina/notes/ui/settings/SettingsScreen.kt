@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -21,12 +23,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.lumina.notes.data.settings.AppSettings
 import com.lumina.notes.util.FontScale
@@ -86,6 +90,29 @@ fun SettingsScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
+            val ctx = LocalContext.current
+            TextButton(
+                onClick = {
+                    viewModel.exportAll { name, content ->
+                        val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/markdown"
+                            putExtra(android.content.Intent.EXTRA_SUBJECT, name)
+                            putExtra(android.content.Intent.EXTRA_TEXT, content)
+                        }
+                        ctx.startActivity(
+                            android.content.Intent.createChooser(send, "Esporta note")
+                        )
+                    }
+                },
+                modifier = Modifier.padding(horizontal = 8.dp),
+            ) {
+                Icon(
+                    Icons.Filled.Share, contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text("Esporta tutte le note (.md)")
+            }
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
             SectionTitle("Info")
