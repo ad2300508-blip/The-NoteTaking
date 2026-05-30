@@ -46,6 +46,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -272,6 +274,8 @@ private fun InkArea(
     val paperOrdinal by viewModel.paperStyle.collectAsState()
     val paper = PaperStyle.fromOrdinal(paperOrdinal)
     var menuOpen by remember { mutableStateOf(false) }
+    var zoom by remember { mutableFloatStateOf(1f) }
+    var resetSignal by remember { mutableIntStateOf(0) }
 
     Box(Modifier.fillMaxSize()) {
         PaperBackground(style = paper, modifier = Modifier.fillMaxSize())
@@ -279,7 +283,20 @@ private fun InkArea(
             controller = viewModel.ink,
             palmRejection = palmRejection,
             modifier = Modifier.fillMaxSize(),
+            resetZoomSignal = resetSignal,
+            onZoomChange = { zoom = it },
         )
+
+        // Zoom badge + reset, shown only when the canvas is zoomed.
+        if (kotlin.math.abs(zoom - 1f) > 0.02f) {
+            androidx.compose.material3.AssistChip(
+                onClick = { resetSignal++ },
+                label = { Text("${(zoom * 100).toInt()}%  ·  1:1") },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp),
+            )
+        }
 
         // Paper-style picker (top-start overlay).
         Box(Modifier.align(Alignment.TopStart).padding(8.dp)) {

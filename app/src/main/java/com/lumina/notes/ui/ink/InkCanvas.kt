@@ -54,12 +54,22 @@ fun InkCanvas(
     controller: InkController,
     palmRejection: Boolean,
     modifier: Modifier = Modifier,
+    resetZoomSignal: Int = 0,
+    onZoomChange: (Float) -> Unit = {},
 ) {
     var liveStroke by remember { mutableStateOf<List<StrokePoint>>(emptyList()) }
     var liveTool by remember { mutableStateOf(PenTool.PEN) }
     var transform by remember { mutableStateOf(CanvasTransform()) }
     val eraserRadius = with(LocalDensity.current) { 16.dp.toPx() }
     val haptics = LocalHapticFeedback.current
+
+    // External reset (button/double-tap) returns the canvas to 1:1.
+    androidx.compose.runtime.LaunchedEffect(resetZoomSignal) {
+        if (resetZoomSignal > 0) {
+            transform = CanvasTransform()
+            onZoomChange(1f)
+        }
+    }
 
     Box(
         modifier
@@ -121,6 +131,7 @@ fun InkCanvas(
                                 val centroid = event.calculateCentroid()
                                 if (centroid != Offset.Unspecified) {
                                     transform = transform.transform(centroid, zoom, pan)
+                                    onZoomChange(transform.scale)
                                 }
                                 event.changes.forEach { it.consume() }
                             }
