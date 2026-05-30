@@ -43,6 +43,7 @@ import com.lumina.notes.data.local.NoteEntity
 import com.lumina.notes.data.local.TagsCodec
 import com.lumina.notes.ui.theme.NoteAccents
 import com.lumina.notes.util.RelativeTime
+import com.lumina.notes.util.SearchSnippet
 
 @OptIn(
     androidx.compose.foundation.ExperimentalFoundationApi::class,
@@ -58,6 +59,7 @@ fun NoteCard(
     onDuplicate: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    query: String = "",
 ) {
     val accent = NoteAccents[note.colorSeed % NoteAccents.size]
     var menuOpen by remember { mutableStateOf(false) }
@@ -119,9 +121,17 @@ fun NoteCard(
                 }
             }
             if (note.preview.isNotBlank()) {
+                // When searching the body, show a snippet around the match.
+                val preview = remember(note.body, query) {
+                    if (query.isNotBlank() && note.body.contains(query, ignoreCase = true)) {
+                        SearchSnippet.of(note.body, query)
+                    } else {
+                        note.preview
+                    }
+                }
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = note.preview,
+                    text = preview,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 6,

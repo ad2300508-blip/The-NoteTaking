@@ -229,6 +229,7 @@ fun NotesListScreen(
                                 onToggleFavorite = { viewModel.toggleFavorite(note) },
                                 onDuplicate = { viewModel.duplicate(note) },
                                 onDelete = deleteWithUndo,
+                                query = state.query,
                             )
                         }
                     }
