@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke as StrokeStyle
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -61,6 +63,8 @@ fun InkCanvas(
     var liveStroke by remember { mutableStateOf<List<StrokePoint>>(emptyList()) }
     var liveTool by remember { mutableStateOf(PenTool.PEN) }
     var transform by remember { mutableStateOf(CanvasTransform()) }
+    // Where the S Pen is hovering (no contact yet), in screen space, or null.
+    var hover by remember { mutableStateOf<Offset?>(null) }
     val eraserRadius = with(LocalDensity.current) { 16.dp.toPx() }
     val haptics = LocalHapticFeedback.current
 
@@ -156,6 +160,25 @@ fun InkCanvas(
                     }
                 }
             }
+            // S Pen hover: track the pen above the screen and clear on lift/exit.
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        when (event.type) {
+                            PointerEventType.Exit -> hover = null
+                            PointerEventType.Enter,
+                            PointerEventType.Move -> {
+                                val c = event.changes.firstOrNull()
+                                hover = if (c != null && !c.pressed &&
+                                    (c.type == PointerType.Stylus || c.type == PointerType.Eraser)
+                                ) c.position else null
+                            }
+                            else -> if (event.changes.any { it.pressed }) hover = null
+                        }
+                    }
+                }
+            }
     ) {
         // Vector rendering with a draw-time transform keeps ink crisp at any
         // zoom (scaling a rasterized cache would blur it). Reading
@@ -178,6 +201,19 @@ fun InkCanvas(
                         )
                     )
                 }
+            }
+            // Hover indicator (screen space): a ring at the pen tip, tinted with
+            // the current ink color, so you can aim before touching down.
+            hover?.let { h ->
+                val isEraser = controller.tool == PenTool.ERASER
+                val r = if (isEraser) eraserRadius
+                else (controller.strokeWidth * transform.scale / 2f + 4.dp.toPx())
+                drawCircle(
+                    color = if (isEraser) Color(0xFF888888) else Color(controller.color),
+                    radius = r,
+                    center = h,
+                    style = StrokeStyle(width = 1.5.dp.toPx()),
+                )
             }
         }
     }
