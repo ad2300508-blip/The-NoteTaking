@@ -152,6 +152,15 @@ class InkController(initial: List<Stroke> = emptyList()) {
 
     fun encode(): String = InkSerializer.encode(strokes)
 
+    /** Largest y-coordinate across all ink (0 when empty); drives page growth. */
+    fun contentBottom(): Float {
+        var maxY = 0f
+        for (s in strokes) {
+            for (p in s.points) if (p.y > maxY) maxY = p.y
+        }
+        return maxY
+    }
+
     private fun strokeHit(s: Stroke, x: Float, y: Float, radius: Float): Boolean {
         val b = s.bounds()
         if (x < b[0] - radius || x > b[2] + radius || y < b[1] - radius || y > b[3] + radius) {
