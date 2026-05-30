@@ -62,6 +62,11 @@ Con Android Studio (Ladybug+) o da terminale con l'SDK configurato:
   appoggia la mano mentre scrivi con la penna, i tocchi delle dita vengono
   ignorati.
 
+### Scorciatoie da tastiera (cover-tastiera del Tab)
+
+- **Ctrl + N** — nuova nota
+- **Esc** — torna alla lista
+
 ### Air Command / nota rapida
 
 L'app registra l'azione **CREATE_NOTE**: dal menu Air Command della S Pen

@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
@@ -22,6 +23,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +31,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import com.lumina.notes.data.settings.AppSettings
 import com.lumina.notes.ui.editor.EditorScreen
@@ -73,7 +83,31 @@ fun LuminaApp(settings: AppSettings, quickNote: Boolean = false) {
         }
     }
 
-    Surface(color = MaterialTheme.colorScheme.background) {
+    // Hardware-keyboard shortcuts (Galaxy Tab book cover keyboard):
+    //   Ctrl+N → new note   ·   Esc → back to the list
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { focusRequester.requestFocus() } }
+
+    Surface(
+        color = MaterialTheme.colorScheme.background,
+        modifier = Modifier
+            .focusRequester(focusRequester)
+            .focusable()
+            .onPreviewKeyEvent { event ->
+                if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                when {
+                    event.isCtrlPressed && event.key == Key.N -> {
+                        notesVm.createNote { detail = Detail.Note(it) }
+                        true
+                    }
+                    event.key == Key.Escape && detail != Detail.None -> {
+                        detail = Detail.None
+                        true
+                    }
+                    else -> false
+                }
+            },
+    ) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             // Capture into locals so they're usable inside nested lambdas
             // (Row/AnimatedContent) where the BoxWithConstraints receiver
