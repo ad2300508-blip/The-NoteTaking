@@ -67,6 +67,16 @@ Con Android Studio (Ladybug+) o da terminale con l'SDK configurato:
 - **Ctrl + N** — nuova nota
 - **Esc** — torna alla lista
 
+### Air Actions (pulsante S Pen)
+
+Nell'editor, in modalità Scrittura, il **pulsante laterale della S Pen**:
+
+- **Click singolo** → alterna penna ↔ gomma
+- **Doppio click** → passa all'evidenziatore
+
+Richiede il servizio *S Pen Remote* di Samsung (presente sui Galaxy con
+S Pen). Su dispositivi senza, la funzione è semplicemente inattiva.
+
 ### Air Command / nota rapida
 
 L'app registra l'azione **CREATE_NOTE**: dal menu Air Command della S Pen

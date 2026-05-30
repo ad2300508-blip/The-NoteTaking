@@ -283,6 +283,25 @@ private fun InkArea(
     var zoom by remember { mutableFloatStateOf(1f) }
     var resetSignal by remember { mutableIntStateOf(0) }
 
+    // S Pen Air Actions: the side button toggles pen/eraser; a double click
+    // switches to the highlighter. No-op on devices without the S Pen SDK.
+    val appCtx = androidx.compose.ui.platform.LocalContext.current.applicationContext
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        val air = com.lumina.notes.spen.SpenAirActions(appCtx)
+        air.onButtonClick = {
+            viewModel.ink.selectTool(
+                if (viewModel.ink.tool == com.lumina.notes.data.ink.PenTool.ERASER)
+                    com.lumina.notes.data.ink.PenTool.PEN
+                else com.lumina.notes.data.ink.PenTool.ERASER
+            )
+        }
+        air.onButtonDouble = {
+            viewModel.ink.selectTool(com.lumina.notes.data.ink.PenTool.HIGHLIGHTER)
+        }
+        air.connect()
+        onDispose { air.disconnect() }
+    }
+
     Box(Modifier.fillMaxSize()) {
         PaperBackground(style = paper, modifier = Modifier.fillMaxSize())
         InkCanvas(
