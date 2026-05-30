@@ -9,6 +9,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -66,7 +68,7 @@ import androidx.compose.ui.unit.dp
 import com.lumina.notes.data.local.NoteEntity
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun NotesListScreen(
     viewModel: NotesListViewModel,
@@ -160,6 +162,18 @@ fun NotesListScreen(
                         label = { Text("Fissate") },
                         leadingIcon = { Icon(Icons.Filled.PushPin, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     )
+                }
+                if (state.allTags.isNotEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        state.allTags.forEach { tag ->
+                            FilterChip(
+                                selected = state.activeTag.equals(tag, ignoreCase = true),
+                                onClick = { viewModel.onTagClick(tag) },
+                                label = { Text("#$tag") },
+                            )
+                        }
+                    }
                 }
             }
 

@@ -1,6 +1,7 @@
 package com.lumina.notes.ui.notes
 
 import com.lumina.notes.data.local.NoteEntity
+import com.lumina.notes.data.local.TagsCodec
 
 /**
  * Pure ordering used by the notes list: pinned notes float to the top, then
@@ -17,5 +18,23 @@ object NotesOrdering {
         return notes.sortedWith(
             compareByDescending<NoteEntity> { it.isPinned }.then(comparator)
         )
+    }
+}
+
+/** Pure helpers for the tag quick-filter, shared by the ViewModel and tests. */
+object TagFiltering {
+
+    /** All distinct tags across [notes], case-folded for dedupe, alpha-sorted. */
+    fun collectTags(notes: List<NoteEntity>): List<String> =
+        notes.flatMap { TagsCodec.decode(it.tags) }
+            .distinctBy { it.lowercase() }
+            .sortedBy { it.lowercase() }
+
+    /** Keeps only notes carrying [tag] (case-insensitive); null keeps all. */
+    fun filterByTag(notes: List<NoteEntity>, tag: String?): List<NoteEntity> {
+        if (tag == null) return notes
+        return notes.filter { note ->
+            TagsCodec.decode(note.tags).any { it.equals(tag, ignoreCase = true) }
+        }
     }
 }

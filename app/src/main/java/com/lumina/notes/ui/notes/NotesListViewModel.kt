@@ -31,6 +31,8 @@ data class NotesUiState(
     val query: String = "",
     val filter: NoteFilter = NoteFilter.ALL,
     val sort: NoteSort = NoteSort.UPDATED,
+    val activeTag: String? = null,
+    val allTags: List<String> = emptyList(),
     val loading: Boolean = true,
 )
 
@@ -40,6 +42,7 @@ class NotesListViewModel(private val repo: NotesRepository) : ViewModel() {
     private val query = MutableStateFlow("")
     private val filter = MutableStateFlow(NoteFilter.ALL)
     private val sort = MutableStateFlow(NoteSort.UPDATED)
+    private val activeTag = MutableStateFlow<String?>(null)
 
     /** A note awaiting a possible undo after a swipe-delete. */
     private var pendingDelete: NoteEntity? = null
@@ -52,20 +55,35 @@ class NotesListViewModel(private val repo: NotesRepository) : ViewModel() {
             query,
             filter,
             sort,
-        ) { notes, q, f, s ->
-            val filtered = when (f) {
+            activeTag,
+        ) { notes, q, f, s, tag ->
+            // The set of tags offered as quick filters, across all notes.
+            val allTags = TagFiltering.collectTags(notes)
+
+            val byFilter = when (f) {
                 NoteFilter.ALL -> notes
                 NoteFilter.FAVORITES -> notes.filter { it.isFavorite }
                 NoteFilter.PINNED -> notes.filter { it.isPinned }
             }
+            val filtered = TagFiltering.filterByTag(byFilter, tag)
+
             // Pinned always float to the top; the chosen sort orders the rest.
             val ordered = NotesOrdering.apply(filtered, s)
-            NotesUiState(notes = ordered, query = q, filter = f, sort = s, loading = false)
+            NotesUiState(
+                notes = ordered, query = q, filter = f, sort = s,
+                activeTag = tag, allTags = allTags, loading = false,
+            )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NotesUiState())
 
     fun onQueryChange(value: String) { query.value = value }
     fun onFilterChange(value: NoteFilter) { filter.value = value }
     fun onSortChange(value: NoteSort) { sort.value = value }
+
+    /** Toggles a tag filter; selecting the active tag again clears it. */
+    fun onTagClick(tag: String) {
+        activeTag.value = if (activeTag.value.equals(tag, ignoreCase = true)) null else tag
+    }
+    fun clearTagFilter() { activeTag.value = null }
 
     /** Creates an empty note and returns its id so the UI can open it. */
     fun createNote(onCreated: (String) -> Unit) {
