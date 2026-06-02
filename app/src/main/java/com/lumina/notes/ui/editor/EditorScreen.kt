@@ -25,6 +25,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PushPin
@@ -285,6 +287,7 @@ private fun InkArea(
     var page by remember { mutableIntStateOf(1) }
     var pageCount by remember { mutableIntStateOf(1) }
     var recognizing by remember { mutableStateOf(false) }
+    var locked by remember { mutableStateOf(false) }
 
     // On-device handwriting recognition (ML Kit), tied to this screen.
     val recognizer = remember { com.lumina.notes.spen.HandwritingRecognizer("it") }
@@ -314,11 +317,23 @@ private fun InkArea(
         InkCanvas(
             controller = viewModel.ink,
             palmRejection = palmRejection,
+            readOnly = locked,
             modifier = Modifier.fillMaxSize(),
             resetZoomSignal = resetSignal,
             onZoomChange = { zoom = it },
             onPageInfo = { current, total -> page = current; pageCount = total },
         )
+
+        // Lock toggle: review handwriting without accidental marks.
+        androidx.compose.material3.FilledTonalIconButton(
+            onClick = { locked = !locked },
+            modifier = Modifier.align(Alignment.TopEnd).padding(top = 56.dp, end = 8.dp),
+        ) {
+            Icon(
+                if (locked) Icons.Filled.Lock else Icons.Filled.LockOpen,
+                contentDescription = if (locked) "Sblocca pagina" else "Blocca pagina",
+            )
+        }
 
         // Zoom badge + reset, shown only when the canvas is zoomed.
         if (kotlin.math.abs(zoom - 1f) > 0.02f) {

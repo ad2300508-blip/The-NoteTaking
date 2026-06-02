@@ -63,6 +63,7 @@ fun InkCanvas(
     controller: InkController,
     palmRejection: Boolean,
     modifier: Modifier = Modifier,
+    readOnly: Boolean = false,
     resetZoomSignal: Int = 0,
     onZoomChange: (Float) -> Unit = {},
     onPageInfo: (current: Int, total: Int) -> Unit = { _, _ -> },
@@ -104,7 +105,7 @@ fun InkCanvas(
                     false // don't consume; let the gesture detector handle it
                 },
             )
-            .pointerInput(controller, palmRejection) {
+            .pointerInput(controller, palmRejection, readOnly) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
                     val pen = down.type == PointerType.Stylus || down.type == PointerType.Eraser
@@ -152,7 +153,12 @@ fun InkCanvas(
                         }
                     }
 
-                    var mode = if (pen) GestureMode.DRAW else GestureMode.UNDECIDED
+                    // Read-only: every gesture just pans/zooms; nothing draws.
+                    var mode = when {
+                        readOnly -> GestureMode.TRANSFORM
+                        pen -> GestureMode.DRAW
+                        else -> GestureMode.UNDECIDED
+                    }
                     if (mode == GestureMode.DRAW) {
                         drawAt(down)
                         down.consume()
