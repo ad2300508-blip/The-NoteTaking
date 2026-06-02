@@ -381,7 +381,15 @@ private fun InkArea(
             onRecognizeText = {
                 if (!recognizing) {
                     recognizing = true
-                    recognizer.recognize(viewModel.ink.strokes.toList()) { text ->
+                    // Recognize the lasso selection if there is one, else the
+                    // whole page.
+                    val ink = viewModel.ink
+                    val target = if (ink.hasSelection) {
+                        ink.selected.mapNotNull { ink.strokes.getOrNull(it) }
+                    } else {
+                        ink.strokes.toList()
+                    }
+                    recognizer.recognize(target) { text ->
                         recognizing = false
                         if (!text.isNullOrBlank()) viewModel.appendRecognizedText(text)
                     }
