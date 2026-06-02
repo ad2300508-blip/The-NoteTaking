@@ -284,6 +284,11 @@ private fun InkArea(
     var resetSignal by remember { mutableIntStateOf(0) }
     var page by remember { mutableIntStateOf(1) }
     var pageCount by remember { mutableIntStateOf(1) }
+    var recognizing by remember { mutableStateOf(false) }
+
+    // On-device handwriting recognition (ML Kit), tied to this screen.
+    val recognizer = remember { com.lumina.notes.spen.HandwritingRecognizer("it") }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { recognizer.close() } }
 
     // S Pen Air Actions: the side button toggles pen/eraser; a double click
     // switches to the highlighter. No-op on devices without the S Pen SDK.
@@ -373,10 +378,27 @@ private fun InkArea(
                 )
                 com.lumina.notes.util.InkExporter.share(ctx, bmp)
             },
+            onRecognizeText = {
+                if (!recognizing) {
+                    recognizing = true
+                    recognizer.recognize(viewModel.ink.strokes.toList()) { text ->
+                        recognizing = false
+                        if (!text.isNullOrBlank()) viewModel.appendRecognizedText(text)
+                    }
+                }
+            },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .windowInsetsPadding(WindowInsets.navigationBars)
                 .padding(16.dp),
         )
+
+        if (recognizing) {
+            androidx.compose.material3.AssistChip(
+                onClick = {},
+                label = { Text("Riconoscimento…") },
+                modifier = Modifier.align(Alignment.TopCenter).padding(8.dp),
+            )
+        }
     }
 }

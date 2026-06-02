@@ -107,6 +107,13 @@ class EditorViewModel(
 
     fun onTitleChange(value: String) { _title.value = value }
     fun onBodyChange(value: String) { _body.value = value }
+
+    /** Appends handwriting-recognized [text] to the note body. */
+    fun appendRecognizedText(text: String) {
+        val current = _body.value
+        _body.value = if (current.isBlank()) text else "$current\n$text"
+        viewModelScope.launch { persist() }
+    }
     fun setColorSeed(seed: Int) { _colorSeed.value = seed; viewModelScope.launch { persist() } }
     fun setPaperStyle(style: Int) { _paperStyle.value = style; viewModelScope.launch { persist() } }
 

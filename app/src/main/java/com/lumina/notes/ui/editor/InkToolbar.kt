@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material.icons.filled.Highlight
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,6 +56,7 @@ import com.lumina.notes.util.ColorHsv
 fun InkToolbar(
     controller: InkController,
     onExportPng: () -> Unit,
+    onRecognizeText: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -148,6 +150,9 @@ fun InkToolbar(
                             tint = MaterialTheme.colorScheme.error,
                         )
                     }
+                }
+                IconButton(onClick = { tap(); onRecognizeText() }, enabled = controller.canUndo) {
+                    Icon(Icons.Filled.TextFields, contentDescription = "Riconosci testo")
                 }
                 IconButton(onClick = onExportPng, enabled = controller.canUndo) {
                     Icon(Icons.Filled.Share, contentDescription = "Condividi disegno")

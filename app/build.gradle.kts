@@ -70,6 +70,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.datastore.preferences)
 
+    // On-device handwriting -> text (ML Kit Digital Ink Recognition)
+    implementation(libs.mlkit.digital.ink)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
