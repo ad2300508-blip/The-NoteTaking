@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.lumina.notes.data.ink.InkSerializer
 import com.lumina.notes.data.ink.PenTool
+import com.lumina.notes.data.ink.RecentColors
 import com.lumina.notes.data.ink.Stroke
 import com.lumina.notes.data.ink.StrokePoint
 import com.lumina.notes.data.ink.StrokeSmoothing
@@ -49,12 +50,22 @@ class InkController(initial: List<Stroke> = emptyList()) {
     /** Indices of strokes currently lasso-selected (highlighted, deletable). */
     val selected: SnapshotStateList<Int> = mutableStateListOf()
 
+    /** Most-recently-used ink colors, newest first (for quick re-selection). */
+    val recentColors: SnapshotStateList<Long> = mutableStateListOf()
+    private val recents = RecentColors()
+
     val canUndo: Boolean get() = undoStack.isNotEmpty()
     val canRedo: Boolean get() = redoStack.isNotEmpty()
     val hasSelection: Boolean get() = selected.isNotEmpty()
 
     fun selectTool(t: PenTool) { tool = t; clearSelection() }
     fun selectColor(c: Long) { color = c }
+
+    private fun rememberColor(c: Long) {
+        recents.add(c)
+        recentColors.clear()
+        recentColors.addAll(recents.colors)
+    }
     fun setWidth(w: Float) { strokeWidth = w }
 
     /** Selects strokes enclosed by a lasso [polygon] (canvas-space points). */
@@ -140,6 +151,7 @@ class InkController(initial: List<Stroke> = emptyList()) {
     private fun addStroke(stroke: Stroke) {
         pushHistory()
         strokes.add(stroke)
+        if (stroke.tool != PenTool.ERASER) rememberColor(stroke.color)
         revision++
     }
 

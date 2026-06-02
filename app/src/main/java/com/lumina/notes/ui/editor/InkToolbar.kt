@@ -196,6 +196,27 @@ fun InkToolbar(
                         .background(Color(ColorHsv.toArgb(hue, 0.9f, 0.9f)), CircleShape)
                 )
             }
+
+            // Recently used pens, for one-tap re-selection.
+            if (controller.recentColors.isNotEmpty()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text2("Recenti")
+                    Spacer(Modifier.width(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        controller.recentColors.forEach { c ->
+                            ColorSwatch(
+                                color = Color(c),
+                                selected = controller.color == c && controller.tool != PenTool.ERASER,
+                                onClick = {
+                                    tap()
+                                    controller.selectColor(c)
+                                    if (controller.tool == PenTool.ERASER) controller.selectTool(PenTool.PEN)
+                                },
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
