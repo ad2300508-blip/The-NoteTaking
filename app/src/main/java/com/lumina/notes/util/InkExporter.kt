@@ -97,16 +97,44 @@ object InkExporter {
             FileOutputStream(file).use { out ->
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
             }
-            val uri = FileProvider.getUriForFile(
-                context, "${context.packageName}.fileprovider", file,
-            )
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "image/png"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            context.startActivity(Intent.createChooser(intent, "Condividi disegno"))
+            shareFile(context, file, "image/png", "Condividi disegno")
             true
         }.getOrDefault(false)
+    }
+
+    /** Renders the strokes to a single-page PDF and shares it. */
+    fun sharePdf(
+        context: Context,
+        strokes: List<Stroke>,
+        fileName: String = "lumina-nota.pdf",
+    ): Boolean {
+        return runCatching {
+            val bitmap = renderToBitmap(strokes)
+            val pdf = android.graphics.pdf.PdfDocument()
+            val pageInfo = android.graphics.pdf.PdfDocument.PageInfo
+                .Builder(bitmap.width, bitmap.height, 1).create()
+            val page = pdf.startPage(pageInfo)
+            page.canvas.drawBitmap(bitmap, 0f, 0f, null)
+            pdf.finishPage(page)
+
+            val dir = File(context.cacheDir, "shared").apply { mkdirs() }
+            val file = File(dir, fileName)
+            FileOutputStream(file).use { out -> pdf.writeTo(out) }
+            pdf.close()
+            shareFile(context, file, "application/pdf", "Esporta PDF")
+            true
+        }.getOrDefault(false)
+    }
+
+    private fun shareFile(context: Context, file: File, mime: String, title: String) {
+        val uri = FileProvider.getUriForFile(
+            context, "${context.packageName}.fileprovider", file,
+        )
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = mime
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(intent, title))
     }
 }

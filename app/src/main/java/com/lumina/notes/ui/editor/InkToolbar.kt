@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material.icons.filled.Highlight
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.AlertDialog
@@ -57,6 +58,7 @@ fun InkToolbar(
     controller: InkController,
     onExportPng: () -> Unit,
     onRecognizeText: () -> Unit = {},
+    onExportPdf: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -156,6 +158,9 @@ fun InkToolbar(
                 }
                 IconButton(onClick = onExportPng, enabled = controller.canUndo) {
                     Icon(Icons.Filled.Share, contentDescription = "Condividi disegno")
+                }
+                IconButton(onClick = onExportPdf, enabled = controller.canUndo) {
+                    Icon(Icons.Filled.PictureAsPdf, contentDescription = "Esporta PDF")
                 }
             }
 

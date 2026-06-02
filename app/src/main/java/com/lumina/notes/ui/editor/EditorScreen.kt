@@ -378,6 +378,9 @@ private fun InkArea(
                 )
                 com.lumina.notes.util.InkExporter.share(ctx, bmp)
             },
+            onExportPdf = {
+                com.lumina.notes.util.InkExporter.sharePdf(ctx, viewModel.ink.strokes.toList())
+            },
             onRecognizeText = {
                 if (!recognizing) {
                     recognizing = true
