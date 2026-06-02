@@ -50,6 +50,7 @@ import com.lumina.notes.ui.ink.InkController
 import com.lumina.notes.ui.theme.InkPalette
 import com.lumina.notes.util.ColorHsv
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun InkToolbar(
     controller: InkController,
@@ -172,6 +173,17 @@ fun InkToolbar(
                             CircleShape,
                         )
                 )
+                Spacer(Modifier.width(12.dp))
+                // Quick width presets for switching nib while writing.
+                listOf("Fine" to 2.5f, "Medio" to 6f, "Largo" to 12f).forEach { (label, w) ->
+                    val on = kotlin.math.abs(controller.strokeWidth - w) < 0.6f
+                    androidx.compose.material3.FilterChip(
+                        selected = on,
+                        onClick = { tap(); controller.setWidth(w) },
+                        label = { androidx.compose.material3.Text(label) },
+                        modifier = Modifier.padding(end = 6.dp),
+                    )
+                }
             }
 
             // Custom color: a hue slider feeds a live preview swatch.
