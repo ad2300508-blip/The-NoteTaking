@@ -62,6 +62,20 @@ Con Android Studio (Ladybug+) o da terminale con l'SDK configurato:
   appoggia la mano mentre scrivi con la penna, i tocchi delle dita vengono
   ignorati.
 
+### Gesti S Pen a mano libera
+
+- **Doppio tocco** col pennino → alterna penna / gomma.
+- **Scarabocchio** (avanti-indietro veloce) → cancella i tratti sotto.
+- **Raddrizza forma** (pulsante ✦) → l'ultimo tratto diventa linea/rettangolo/cerchio.
+- **Lazo** (strumento Seleziona) → cerchia tratti, poi trascinali o eliminali.
+
+### Scrittura a mano → testo
+
+Il pulsante **"Riconosci testo"** (icona testo) nella toolbar inchiostro
+converte la scrittura della pagina in testo digitato e lo accoda al corpo
+della nota (modalità Tastiera). Usa **ML Kit Digital Ink** on-device: la
+prima volta scarica il modello (serve rete), poi funziona offline.
+
 ### Scorciatoie da tastiera (cover-tastiera del Tab)
 
 - **Ctrl + N** — nuova nota
