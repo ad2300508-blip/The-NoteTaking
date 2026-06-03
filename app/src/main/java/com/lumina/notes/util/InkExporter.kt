@@ -63,9 +63,7 @@ object InkExporter {
 
         // Draw the annotated photo (fitted) under the ink, if any.
         if (!backgroundImagePath.isNullOrBlank()) {
-            runCatching {
-                android.graphics.BitmapFactory.decodeFile(backgroundImagePath)
-            }.getOrNull()?.let { bg ->
+            ImageDecoder.decodeSampled(backgroundImagePath, maxEdge = 3000)?.let { bg ->
                 val scale = minOf(width.toFloat() / bg.width, height.toFloat() / bg.height)
                 val dw = bg.width * scale
                 val dh = bg.height * scale

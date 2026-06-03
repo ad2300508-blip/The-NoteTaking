@@ -29,8 +29,7 @@ import com.lumina.notes.ui.theme.NoteAccents
 @Composable
 fun AnnotatedImageBackground(path: String, modifier: Modifier = Modifier) {
     val bitmap = remember(path) {
-        runCatching { android.graphics.BitmapFactory.decodeFile(path)?.asImageBitmap() }
-            .getOrNull()
+        com.lumina.notes.util.ImageDecoder.decodeSampled(path)?.asImageBitmap()
     }
     if (bitmap != null) {
         Image(
