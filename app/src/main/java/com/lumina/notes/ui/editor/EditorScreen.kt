@@ -24,7 +24,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Draw
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.HideImage
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Notes
@@ -318,12 +320,17 @@ private fun InkArea(
         onDispose { air.disconnect() }
     }
 
+    val bgImage by viewModel.bgImage.collectAsState()
+
     Box(Modifier.fillMaxSize()) {
         PaperBackground(
             style = paper,
             modifier = Modifier.fillMaxSize(),
             spacingDp = lineSpacingDp,
         )
+        if (bgImage.isNotBlank()) {
+            AnnotatedImageBackground(path = bgImage, modifier = Modifier.fillMaxSize())
+        }
         InkCanvas(
             controller = viewModel.ink,
             palmRejection = palmRejection,
@@ -343,6 +350,25 @@ private fun InkArea(
             Icon(
                 if (locked) Icons.Filled.Lock else Icons.Filled.LockOpen,
                 contentDescription = if (locked) "Sblocca pagina" else "Blocca pagina",
+            )
+        }
+
+        // Annotate an image: pick a photo to use as the page background,
+        // or clear the current one.
+        val imgCtx = androidx.compose.ui.platform.LocalContext.current
+        val picker = androidx.activity.compose.rememberLauncherForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.GetContent()
+        ) { uri -> if (uri != null) viewModel.setBackgroundImage(imgCtx, uri) }
+        androidx.compose.material3.FilledTonalIconButton(
+            onClick = {
+                if (bgImage.isNotBlank()) viewModel.clearBackgroundImage()
+                else picker.launch("image/*")
+            },
+            modifier = Modifier.align(Alignment.TopEnd).padding(top = 104.dp, end = 8.dp),
+        ) {
+            Icon(
+                if (bgImage.isNotBlank()) Icons.Filled.HideImage else Icons.Filled.AddPhotoAlternate,
+                contentDescription = if (bgImage.isNotBlank()) "Rimuovi immagine" else "Aggiungi immagine",
             )
         }
 

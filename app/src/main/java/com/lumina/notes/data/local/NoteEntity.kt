@@ -26,6 +26,8 @@ data class NoteEntity(
     @ColumnInfo(name = "tags", defaultValue = "") val tags: String = "",
     /** Last editor mode: 0 = text, 1 = ink. Restored when reopening. */
     @ColumnInfo(name = "last_mode", defaultValue = "0") val lastMode: Int = 0,
+    /** Absolute path to a background image to annotate, or empty for none. */
+    @ColumnInfo(name = "bg_image", defaultValue = "") val bgImage: String = "",
     @ColumnInfo(name = "is_pinned") val isPinned: Boolean = false,
     @ColumnInfo(name = "is_favorite") val isFavorite: Boolean = false,
     @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis(),

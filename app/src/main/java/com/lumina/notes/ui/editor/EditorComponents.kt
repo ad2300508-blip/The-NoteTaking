@@ -12,14 +12,35 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.lumina.notes.data.ink.PaperStyle
 import com.lumina.notes.ui.theme.NoteAccents
+
+/** Decodes [path] and draws it fitted behind the ink for annotation. */
+@Composable
+fun AnnotatedImageBackground(path: String, modifier: Modifier = Modifier) {
+    val bitmap = remember(path) {
+        runCatching { android.graphics.BitmapFactory.decodeFile(path)?.asImageBitmap() }
+            .getOrNull()
+    }
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap,
+            contentDescription = "Immagine da annotare",
+            modifier = modifier,
+            contentScale = ContentScale.Fit,
+        )
+    }
+}
 
 /** A faint ruling that gives the ink canvas a tactile "paper" feel. */
 @Composable

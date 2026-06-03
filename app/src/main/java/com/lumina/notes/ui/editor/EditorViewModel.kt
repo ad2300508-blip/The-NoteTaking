@@ -48,6 +48,10 @@ class EditorViewModel(
     private val _lastMode = MutableStateFlow(0)
     val lastMode: StateFlow<Int> = _lastMode.asStateFlow()
 
+    /** Absolute path of a background image to annotate, or empty. */
+    private val _bgImage = MutableStateFlow("")
+    val bgImage: StateFlow<String> = _bgImage.asStateFlow()
+
     val ink = InkController()
 
     private var loaded: NoteEntity? = null
@@ -70,6 +74,7 @@ class EditorViewModel(
                 _isFavorite.value = note.isFavorite
                 _tags.value = TagsCodec.decode(note.tags)
                 _lastMode.value = note.lastMode
+                _bgImage.value = note.bgImage
                 InkSerializer.decode(note.inkJson).let { strokes ->
                     ink.strokes.clear()
                     ink.strokes.addAll(strokes)
@@ -137,6 +142,40 @@ class EditorViewModel(
         viewModelScope.launch { persist() }
     }
 
+    /**
+     * Copies the picked image [source] into the app's files and uses it as the
+     * page background to annotate. Runs on IO; persists when done.
+     */
+    fun setBackgroundImage(context: android.content.Context, source: android.net.Uri) {
+        viewModelScope.launch {
+            val path = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching {
+                    val dir = java.io.File(context.filesDir, "note-images").apply { mkdirs() }
+                    val dest = java.io.File(dir, "$noteId.jpg")
+                    context.contentResolver.openInputStream(source)?.use { input ->
+                        java.io.FileOutputStream(dest).use { output -> input.copyTo(output) }
+                    }
+                    dest.absolutePath
+                }.getOrNull()
+            }
+            if (path != null) {
+                _bgImage.value = path
+                persist()
+            }
+        }
+    }
+
+    fun clearBackgroundImage() {
+        val old = _bgImage.value
+        _bgImage.value = ""
+        viewModelScope.launch {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching { if (old.isNotBlank()) java.io.File(old).delete() }
+            }
+            persist()
+        }
+    }
+
     suspend fun persist() {
         val base = loaded ?: NoteEntity(id = noteId)
         val updated = base.copy(
@@ -147,6 +186,7 @@ class EditorViewModel(
             paperStyle = _paperStyle.value,
             tags = TagsCodec.encode(_tags.value),
             lastMode = _lastMode.value,
+            bgImage = _bgImage.value,
             isPinned = _isPinned.value,
             isFavorite = _isFavorite.value,
         )

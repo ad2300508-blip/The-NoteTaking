@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [NoteEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class LuminaDatabase : RoomDatabase() {
@@ -40,6 +40,13 @@ abstract class LuminaDatabase : RoomDatabase() {
             }
         }
 
+        /** v4 → v5: background image to annotate. */
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notes ADD COLUMN bg_image TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun get(context: Context): LuminaDatabase =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
@@ -47,7 +54,7 @@ abstract class LuminaDatabase : RoomDatabase() {
                     LuminaDatabase::class.java,
                     "lumina-notes.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { INSTANCE = it }
