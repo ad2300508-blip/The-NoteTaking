@@ -426,12 +426,17 @@ private fun InkArea(
             controller = viewModel.ink,
             onExportPng = {
                 val bmp = com.lumina.notes.util.InkExporter.renderToBitmap(
-                    viewModel.ink.strokes.toList()
+                    viewModel.ink.strokes.toList(),
+                    backgroundImagePath = bgImage.ifBlank { null },
                 )
                 com.lumina.notes.util.InkExporter.share(ctx, bmp)
             },
             onExportPdf = {
-                com.lumina.notes.util.InkExporter.sharePdf(ctx, viewModel.ink.strokes.toList())
+                com.lumina.notes.util.InkExporter.sharePdf(
+                    ctx,
+                    viewModel.ink.strokes.toList(),
+                    backgroundImagePath = bgImage.ifBlank { null },
+                )
             },
             onRecognizeText = {
                 if (!recognizing) {

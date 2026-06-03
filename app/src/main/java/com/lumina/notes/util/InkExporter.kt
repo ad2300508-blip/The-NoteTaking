@@ -38,7 +38,11 @@ object InkExporter {
         return if (any) floatArrayOf(minX, minY, maxX, maxY) else null
     }
 
-    fun renderToBitmap(strokes: List<Stroke>, background: Int = Color.WHITE): Bitmap {
+    fun renderToBitmap(
+        strokes: List<Stroke>,
+        background: Int = Color.WHITE,
+        backgroundImagePath: String? = null,
+    ): Bitmap {
         val bounds = contentBounds(strokes)
         val width: Int
         val height: Int
@@ -56,6 +60,25 @@ object InkExporter {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         canvas.drawColor(background)
+
+        // Draw the annotated photo (fitted) under the ink, if any.
+        if (!backgroundImagePath.isNullOrBlank()) {
+            runCatching {
+                android.graphics.BitmapFactory.decodeFile(backgroundImagePath)
+            }.getOrNull()?.let { bg ->
+                val scale = minOf(width.toFloat() / bg.width, height.toFloat() / bg.height)
+                val dw = bg.width * scale
+                val dh = bg.height * scale
+                val left = (width - dw) / 2f
+                val top = (height - dh) / 2f
+                canvas.drawBitmap(
+                    bg,
+                    null,
+                    android.graphics.RectF(left, top, left + dw, top + dh),
+                    Paint(Paint.FILTER_BITMAP_FLAG),
+                )
+            }
+        }
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
@@ -107,9 +130,10 @@ object InkExporter {
         context: Context,
         strokes: List<Stroke>,
         fileName: String = "lumina-nota.pdf",
+        backgroundImagePath: String? = null,
     ): Boolean {
         return runCatching {
-            val bitmap = renderToBitmap(strokes)
+            val bitmap = renderToBitmap(strokes, backgroundImagePath = backgroundImagePath)
             val pdf = android.graphics.pdf.PdfDocument()
             val pageInfo = android.graphics.pdf.PdfDocument.PageInfo
                 .Builder(bitmap.width, bitmap.height, 1).create()
