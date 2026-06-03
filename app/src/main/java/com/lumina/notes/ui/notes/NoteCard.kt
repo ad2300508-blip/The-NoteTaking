@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Star
@@ -161,6 +162,8 @@ fun NoteCard(
                 }
             }
             Spacer(Modifier.height(10.dp))
+            val hasImage = note.bgImage.isNotBlank()
+            val hasIndicator = note.hasInk || hasImage
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (note.hasInk) {
                     Icon(
@@ -173,13 +176,20 @@ fun NoteCard(
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Spacer(Modifier.weight(1f))
                 }
+                if (hasImage) {
+                    if (note.hasInk) Spacer(Modifier.size(10.dp))
+                    Icon(
+                        Icons.Filled.Image, contentDescription = "Immagine",
+                        tint = accent, modifier = Modifier.size(14.dp),
+                    )
+                }
+                if (hasIndicator) Spacer(Modifier.weight(1f))
                 Text(
                     RelativeTime.format(note.updatedAt),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = if (note.hasInk) Modifier else Modifier.fillMaxWidth(),
+                    modifier = if (hasIndicator) Modifier else Modifier.fillMaxWidth(),
                 )
             }
         }
