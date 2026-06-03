@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Lumina</string>
+    <string name="notes">Note</string>
+    <string name="search_hint">Cerca tra le note…</string>
+    <string name="new_note">Nuova nota</string>
+    <string name="empty_title">Nessuna nota</string>
+    <string name="empty_subtitle">Tocca + o usa la S Pen per iniziare a scrivere</string>
+    <string name="untitled">Senza titolo</string>
+    <string name="title_hint">Titolo</string>
+    <string name="body_hint">Inizia a scrivere…</string>
+    <string name="delete">Elimina</string>
+    <string name="undo">Annulla</string>
+    <string name="redo">Ripeti</string>
+    <string name="favorite">Preferito</string>
+    <string name="pin">Fissa in alto</string>
+    <string name="pen">Penna</string>
+    <string name="highlighter">Evidenziatore</string>
+    <string name="eraser">Gomma</string>
+    <string name="clear_canvas">Cancella tutto</string>
+    <string name="text_mode">Testo</string>
+    <string name="ink_mode">Inchiostro</string>
+    <string name="settings">Impostazioni</string>
+    <string name="dynamic_color">Colore dinamico (Material You)</string>
+    <string name="dark_theme">Tema scuro</string>
+    <string name="palm_rejection">Rifiuto del palmo (solo S Pen)</string>
+    <string name="back">Indietro</string>
+    <string name="note_deleted">Nota eliminata</string>
+    <string name="select_color">Colore</string>
+    <string name="stroke_width">Spessore</string>
+</resources>

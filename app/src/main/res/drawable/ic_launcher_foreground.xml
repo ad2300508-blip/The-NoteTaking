@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Stylized pen nib drawing a fluid stroke -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,72 C42,54 54,52 66,38 L72,44 C58,58 56,70 38,82 L30,72 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M68,36 L72,32 a4,4 0 0 1 6,0 l2,2 a4,4 0 0 1 0,6 l-4,4 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.55"
+        android:pathData="M28,80 C40,76 44,80 40,84 C36,88 24,84 28,80 Z" />
+</vector>

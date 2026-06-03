@@ -1,0 +1,77 @@
+name: Release APK
+
+# Builds the (debug-signed, installable) APK and publishes it to the
+# repository's Releases so it can be downloaded/sideloaded directly.
+on:
+  push:
+    branches:
+      - "main"
+      - "claude/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# No concurrency group on purpose: a shared group makes GitHub drop queued
+# runs when pushes come quickly, so APKs never publish. Each run has a unique
+# version (run_number), so letting them all run independently is fine.
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace --no-configuration-cache
+
+      - name: Stage APK with a versioned name
+        id: stage
+        run: |
+          set -e
+          src=$(find app/build/outputs/apk/debug -name "*.apk" | head -1)
+          version="1.0.${{ github.run_number }}"
+          out="lumina-${version}.apk"
+          cp "$src" "$out"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "apk=$out" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.stage.outputs.version }}
+          name: Lumina v${{ steps.stage.outputs.version }}
+          body: |
+            Automated build of **Lumina** — note-taking app for the Galaxy Tab S10 Ultra.
+
+            - Built from `${{ github.ref_name }}` @ `${{ github.sha }}`
+            - APK is debug-signed and directly installable (enable "install
+              unknown apps" on the tablet, then open the file).
+
+            > Debug build: for personal sideloading, not Play Store distribution.
+          files: ${{ steps.stage.outputs.apk }}
+          make_latest: true

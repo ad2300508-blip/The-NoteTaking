@@ -1,0 +1,42 @@
+package com.lumina.notes.util
+
+/**
+ * Builds a short preview snippet centered on the first case-insensitive match
+ * of [query] within [text], with ellipses when truncated. Pure and tested.
+ */
+object SearchSnippet {
+
+    fun of(text: String, query: String, radius: Int = 40): String {
+        val trimmed = text.trim()
+        val q = query.trim()
+        if (q.isEmpty() || trimmed.isEmpty()) return trimmed.take(radius * 2)
+
+        val idx = trimmed.indexOf(q, ignoreCase = true)
+        if (idx < 0) return trimmed.take(radius * 2)
+
+        val start = (idx - radius).coerceAtLeast(0)
+        val end = (idx + q.length + radius).coerceAtMost(trimmed.length)
+        val core = trimmed.substring(start, end).replace('\n', ' ')
+        val prefix = if (start > 0) "…" else ""
+        val suffix = if (end < trimmed.length) "…" else ""
+        return "$prefix$core$suffix"
+    }
+
+    /**
+     * All [start, endExclusive) ranges where [query] occurs in [text]
+     * (case-insensitive, non-overlapping). Used to bold matches in previews.
+     */
+    fun matchRanges(text: String, query: String): List<IntRange> {
+        val q = query.trim()
+        if (q.isEmpty() || text.isEmpty()) return emptyList()
+        val ranges = ArrayList<IntRange>()
+        var from = 0
+        while (true) {
+            val idx = text.indexOf(q, from, ignoreCase = true)
+            if (idx < 0) break
+            ranges.add(idx until (idx + q.length))
+            from = idx + q.length
+        }
+        return ranges
+    }
+}

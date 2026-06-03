@@ -1,0 +1,119 @@
+package com.lumina.notes.data.settings
+
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import com.lumina.notes.util.FontScale
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
+/** UI/behavior preferences backed by DataStore. */
+data class AppSettings(
+    val dynamicColor: Boolean = true,
+    val darkTheme: Boolean? = null, // null = follow system
+    val palmRejection: Boolean = true,
+    val fontScale: Float = FontScale.DEFAULT,
+    val pressureSensitivity: Float = com.lumina.notes.data.ink.NibWidth.DEFAULT_SENSITIVITY,
+    val lineSpacingDp: Float = 36f,
+)
+
+/** Persisted notes-list view preferences (sort order + filter). */
+data class ViewPreferences(
+    val sortOrdinal: Int = 0,
+    val filterOrdinal: Int = 0,
+)
+
+/** Last-used pen settings, restored across notes/sessions. */
+data class PenPreferences(
+    val color: Long = 0xFF111418L,
+    val strokeWidth: Float = 4f,
+)
+
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+
+class SettingsRepository(private val context: Context) {
+
+    private object Keys {
+        val DYNAMIC = booleanPreferencesKey("dynamic_color")
+        val DARK = booleanPreferencesKey("dark_theme")
+        val DARK_SET = booleanPreferencesKey("dark_theme_set")
+        val PALM = booleanPreferencesKey("palm_rejection")
+        val SORT = intPreferencesKey("notes_sort")
+        val FILTER = intPreferencesKey("notes_filter")
+        val FONT_SCALE = floatPreferencesKey("font_scale")
+        val PEN_COLOR = longPreferencesKey("pen_color")
+        val PEN_WIDTH = floatPreferencesKey("pen_width")
+        val PRESSURE = floatPreferencesKey("pressure_sensitivity")
+        val LINE_SPACING = floatPreferencesKey("line_spacing_dp")
+    }
+
+    val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
+        AppSettings(
+            dynamicColor = p[Keys.DYNAMIC] ?: true,
+            darkTheme = if (p[Keys.DARK_SET] == true) (p[Keys.DARK] ?: false) else null,
+            palmRejection = p[Keys.PALM] ?: true,
+            fontScale = FontScale.sanitize(p[Keys.FONT_SCALE] ?: FontScale.DEFAULT),
+            pressureSensitivity = (p[Keys.PRESSURE]
+                ?: com.lumina.notes.data.ink.NibWidth.DEFAULT_SENSITIVITY).coerceIn(0f, 1f),
+            lineSpacingDp = (p[Keys.LINE_SPACING] ?: 36f).coerceIn(20f, 64f),
+        )
+    }
+
+    val viewPreferences: Flow<ViewPreferences> = context.dataStore.data.map { p ->
+        ViewPreferences(
+            sortOrdinal = p[Keys.SORT] ?: 0,
+            filterOrdinal = p[Keys.FILTER] ?: 0,
+        )
+    }
+
+    val penPreferences: Flow<PenPreferences> = context.dataStore.data.map { p ->
+        PenPreferences(
+            color = p[Keys.PEN_COLOR] ?: 0xFF111418L,
+            strokeWidth = p[Keys.PEN_WIDTH] ?: 4f,
+        )
+    }
+
+    suspend fun setPen(color: Long, strokeWidth: Float) =
+        context.dataStore.edit {
+            it[Keys.PEN_COLOR] = color
+            it[Keys.PEN_WIDTH] = strokeWidth
+        }.let {}
+
+    suspend fun setSort(ordinal: Int) =
+        context.dataStore.edit { it[Keys.SORT] = ordinal }.let {}
+
+    suspend fun setFilter(ordinal: Int) =
+        context.dataStore.edit { it[Keys.FILTER] = ordinal }.let {}
+
+    suspend fun setDynamicColor(value: Boolean) =
+        context.dataStore.edit { it[Keys.DYNAMIC] = value }.let {}
+
+    suspend fun setDarkTheme(value: Boolean?) {
+        context.dataStore.edit {
+            if (value == null) {
+                it[Keys.DARK_SET] = false
+            } else {
+                it[Keys.DARK_SET] = true
+                it[Keys.DARK] = value
+            }
+        }
+    }
+
+    suspend fun setPalmRejection(value: Boolean) =
+        context.dataStore.edit { it[Keys.PALM] = value }.let {}
+
+    suspend fun setFontScale(value: Float) =
+        context.dataStore.edit { it[Keys.FONT_SCALE] = FontScale.sanitize(value) }.let {}
+
+    suspend fun setPressureSensitivity(value: Float) =
+        context.dataStore.edit { it[Keys.PRESSURE] = value.coerceIn(0f, 1f) }.let {}
+
+    suspend fun setLineSpacing(dp: Float) =
+        context.dataStore.edit { it[Keys.LINE_SPACING] = dp.coerceIn(20f, 64f) }.let {}
+}
