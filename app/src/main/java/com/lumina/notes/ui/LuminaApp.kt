@@ -187,6 +187,7 @@ private fun DetailPane(
             viewModel = editorViewModel(detail.id),
             palmRejection = settings.palmRejection,
             fontScale = settings.fontScale,
+            pressureSensitivity = settings.pressureSensitivity,
             onBack = onClose,
             onDeleted = onClose,
             showBackButton = showBackButton,

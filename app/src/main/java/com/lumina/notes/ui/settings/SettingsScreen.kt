@@ -75,6 +75,10 @@ fun SettingsScreen(
                 checked = state.palmRejection,
                 onChange = viewModel::setPalmRejection,
             )
+            PressureRow(
+                value = state.pressureSensitivity,
+                onChange = viewModel::setPressureSensitivity,
+            )
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
             SectionTitle("Libreria")
@@ -185,6 +189,28 @@ private fun FontScaleRow(value: Float, onChange: (Float) -> Unit) {
         }
         Spacer(Modifier.width(12.dp))
         Text(FontScale.label(value), style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable
+private fun PressureRow(value: Float, onChange: (Float) -> Unit) {
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Text("Sensibilità pressione", style = MaterialTheme.typography.titleMedium)
+        Text(
+            "Quanto la pressione della S Pen cambia lo spessore del tratto",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Slider(
+                value = value,
+                onValueChange = onChange,
+                valueRange = 0f..1f,
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.width(12.dp))
+            Text("${(value * 100).toInt()}%", style = MaterialTheme.typography.titleMedium)
+        }
     }
 }
 

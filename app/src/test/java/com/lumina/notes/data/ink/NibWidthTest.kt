@@ -31,4 +31,19 @@ class NibWidthTest {
     @Test fun distanceIsEuclidean() {
         assertEquals(5f, NibWidth.distance(0f, 0f, 3f, 4f), 0.001f)
     }
+
+    @Test fun zeroSensitivityIsUniform() {
+        // Pressure shouldn't matter when sensitivity is 0.
+        val light = NibWidth.of(10f, 0.1f, 0f, sensitivity = 0f)
+        val firm = NibWidth.of(10f, 1f, 0f, sensitivity = 0f)
+        assertEquals(light, firm, 0.001f)
+        assertEquals(10f, firm, 0.001f)
+    }
+
+    @Test fun higherSensitivityWidensSpread() {
+        // Light press: lower sensitivity -> thicker than higher sensitivity.
+        val low = NibWidth.of(10f, 0.1f, 0f, sensitivity = 0.3f)
+        val high = NibWidth.of(10f, 0.1f, 0f, sensitivity = 0.9f)
+        assertTrue(high < low)
+    }
 }

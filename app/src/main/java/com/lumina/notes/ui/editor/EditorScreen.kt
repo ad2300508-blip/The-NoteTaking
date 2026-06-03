@@ -73,6 +73,7 @@ fun EditorScreen(
     viewModel: EditorViewModel,
     palmRejection: Boolean,
     fontScale: Float = 1f,
+    pressureSensitivity: Float = 0.65f,
     onBack: () -> Unit,
     onDeleted: () -> Unit,
     showBackButton: Boolean,
@@ -218,6 +219,7 @@ fun EditorScreen(
                 EditorMode.INK -> InkArea(
                     viewModel = viewModel,
                     palmRejection = palmRejection,
+                    pressureSensitivity = pressureSensitivity,
                 )
             }
         }
@@ -278,6 +280,7 @@ private fun TextBody(
 private fun InkArea(
     viewModel: EditorViewModel,
     palmRejection: Boolean,
+    pressureSensitivity: Float = 0.65f,
 ) {
     val paperOrdinal by viewModel.paperStyle.collectAsState()
     val paper = PaperStyle.fromOrdinal(paperOrdinal)
@@ -318,6 +321,7 @@ private fun InkArea(
             controller = viewModel.ink,
             palmRejection = palmRejection,
             readOnly = locked,
+            pressureSensitivity = pressureSensitivity,
             modifier = Modifier.fillMaxSize(),
             resetZoomSignal = resetSignal,
             onZoomChange = { zoom = it },

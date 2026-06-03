@@ -19,6 +19,7 @@ data class AppSettings(
     val darkTheme: Boolean? = null, // null = follow system
     val palmRejection: Boolean = true,
     val fontScale: Float = FontScale.DEFAULT,
+    val pressureSensitivity: Float = com.lumina.notes.data.ink.NibWidth.DEFAULT_SENSITIVITY,
 )
 
 /** Persisted notes-list view preferences (sort order + filter). */
@@ -47,6 +48,7 @@ class SettingsRepository(private val context: Context) {
         val FONT_SCALE = floatPreferencesKey("font_scale")
         val PEN_COLOR = longPreferencesKey("pen_color")
         val PEN_WIDTH = floatPreferencesKey("pen_width")
+        val PRESSURE = floatPreferencesKey("pressure_sensitivity")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -55,6 +57,8 @@ class SettingsRepository(private val context: Context) {
             darkTheme = if (p[Keys.DARK_SET] == true) (p[Keys.DARK] ?: false) else null,
             palmRejection = p[Keys.PALM] ?: true,
             fontScale = FontScale.sanitize(p[Keys.FONT_SCALE] ?: FontScale.DEFAULT),
+            pressureSensitivity = (p[Keys.PRESSURE]
+                ?: com.lumina.notes.data.ink.NibWidth.DEFAULT_SENSITIVITY).coerceIn(0f, 1f),
         )
     }
 
@@ -103,4 +107,7 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setFontScale(value: Float) =
         context.dataStore.edit { it[Keys.FONT_SCALE] = FontScale.sanitize(value) }.let {}
+
+    suspend fun setPressureSensitivity(value: Float) =
+        context.dataStore.edit { it[Keys.PRESSURE] = value.coerceIn(0f, 1f) }.let {}
 }

@@ -64,6 +64,7 @@ fun InkCanvas(
     palmRejection: Boolean,
     modifier: Modifier = Modifier,
     readOnly: Boolean = false,
+    pressureSensitivity: Float = NibWidth.DEFAULT_SENSITIVITY,
     resetZoomSignal: Int = 0,
     onZoomChange: (Float) -> Unit = {},
     onPageInfo: (current: Int, total: Int) -> Unit = { _, _ -> },
@@ -303,10 +304,10 @@ fun InkCanvas(
                     )
                 }
                 controller.strokes.forEachIndexed { i, s ->
-                    drawInk(s)
+                    drawInk(s, pressureSensitivity)
                     if (i in controller.selected) {
                         // Tint selected strokes by overlaying a translucent pass.
-                        drawInk(s.copy(color = 0x553B82F6L))
+                        drawInk(s.copy(color = 0x553B82F6L), pressureSensitivity)
                     }
                 }
                 if (liveStroke.size >= 2) {
@@ -318,7 +319,8 @@ fun InkCanvas(
                             else controller.strokeWidth,
                             tool = liveTool,
                             tilt = currentTilt[0],
-                        )
+                        ),
+                        pressureSensitivity,
                     )
                 }
             }
@@ -372,7 +374,10 @@ private fun strokeSpan(points: List<StrokePoint>): Float {
     return kotlin.math.hypot(maxX - minX, maxY - minY)
 }
 
-private fun DrawScope.drawInk(stroke: Stroke) {
+private fun DrawScope.drawInk(
+    stroke: Stroke,
+    sensitivity: Float = NibWidth.DEFAULT_SENSITIVITY,
+) {
     val pts = stroke.points
     if (pts.size < 2) return
     val color = Color(stroke.color)
@@ -402,7 +407,7 @@ private fun DrawScope.drawInk(stroke: Stroke) {
                 val b = pts[i]
                 val pressure = (a.pressure + b.pressure) * 0.5f
                 val dist = NibWidth.distance(a.x, a.y, b.x, b.y)
-                val w = NibWidth.of(stroke.baseWidth, pressure, dist) * tiltMul
+                val w = NibWidth.of(stroke.baseWidth, pressure, dist, sensitivity) * tiltMul
                 drawLine(
                     color = color,
                     start = Offset(a.x, a.y),

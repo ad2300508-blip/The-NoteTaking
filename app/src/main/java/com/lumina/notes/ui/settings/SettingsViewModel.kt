@@ -36,6 +36,8 @@ class SettingsViewModel(
     fun setDarkTheme(value: Boolean?) = viewModelScope.launch { repo.setDarkTheme(value) }
     fun setPalmRejection(value: Boolean) = viewModelScope.launch { repo.setPalmRejection(value) }
     fun setFontScale(value: Float) = viewModelScope.launch { repo.setFontScale(value) }
+    fun setPressureSensitivity(value: Float) =
+        viewModelScope.launch { repo.setPressureSensitivity(value) }
 
     /** Builds a Markdown export of all notes and hands it to [onReady]. */
     fun exportAll(onReady: (fileName: String, content: String) -> Unit) {
