@@ -26,14 +26,14 @@ object ImageDecoder {
         }.getOrNull()
     }
 
-    /** Largest power-of-two sample size keeping both dimensions under [maxEdge]. */
+    /**
+     * Smallest power-of-two sample size so that both scaled dimensions are at
+     * most [maxEdge]. (Doubles the sample while either edge still exceeds it.)
+     */
     fun sampleSize(width: Int, height: Int, maxEdge: Int): Int {
+        if (maxEdge <= 0) return 1
         var sample = 1
-        var w = width
-        var h = height
-        while (w / 2 >= maxEdge || h / 2 >= maxEdge) {
-            w /= 2
-            h /= 2
+        while (width / sample > maxEdge || height / sample > maxEdge) {
             sample *= 2
         }
         return sample
