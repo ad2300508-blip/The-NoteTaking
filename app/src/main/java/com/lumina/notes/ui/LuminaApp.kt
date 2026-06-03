@@ -188,6 +188,7 @@ private fun DetailPane(
             palmRejection = settings.palmRejection,
             fontScale = settings.fontScale,
             pressureSensitivity = settings.pressureSensitivity,
+            lineSpacingDp = settings.lineSpacingDp,
             onBack = onClose,
             onDeleted = onClose,
             showBackButton = showBackButton,

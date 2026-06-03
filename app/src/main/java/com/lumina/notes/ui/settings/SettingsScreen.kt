@@ -79,6 +79,10 @@ fun SettingsScreen(
                 value = state.pressureSensitivity,
                 onChange = viewModel::setPressureSensitivity,
             )
+            LineSpacingRow(
+                value = state.lineSpacingDp,
+                onChange = viewModel::setLineSpacing,
+            )
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
             SectionTitle("Libreria")
@@ -189,6 +193,29 @@ private fun FontScaleRow(value: Float, onChange: (Float) -> Unit) {
         }
         Spacer(Modifier.width(12.dp))
         Text(FontScale.label(value), style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LineSpacingRow(value: Float, onChange: (Float) -> Unit) {
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Text("Spaziatura righe", style = MaterialTheme.typography.titleMedium)
+        Text(
+            "Altezza delle righe del quaderno",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("Stretta" to 26f, "Normale" to 36f, "Larga" to 48f).forEach { (label, dp) ->
+                FilterChip(
+                    selected = kotlin.math.abs(value - dp) < 2f,
+                    onClick = { onChange(dp) },
+                    label = { Text(label) },
+                )
+            }
+        }
     }
 }
 

@@ -38,6 +38,7 @@ class SettingsViewModel(
     fun setFontScale(value: Float) = viewModelScope.launch { repo.setFontScale(value) }
     fun setPressureSensitivity(value: Float) =
         viewModelScope.launch { repo.setPressureSensitivity(value) }
+    fun setLineSpacing(dp: Float) = viewModelScope.launch { repo.setLineSpacing(dp) }
 
     /** Builds a Markdown export of all notes and hands it to [onReady]. */
     fun exportAll(onReady: (fileName: String, content: String) -> Unit) {

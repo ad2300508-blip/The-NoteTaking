@@ -74,6 +74,7 @@ fun EditorScreen(
     palmRejection: Boolean,
     fontScale: Float = 1f,
     pressureSensitivity: Float = 0.65f,
+    lineSpacingDp: Float = 36f,
     onBack: () -> Unit,
     onDeleted: () -> Unit,
     showBackButton: Boolean,
@@ -220,6 +221,7 @@ fun EditorScreen(
                     viewModel = viewModel,
                     palmRejection = palmRejection,
                     pressureSensitivity = pressureSensitivity,
+                    lineSpacingDp = lineSpacingDp,
                 )
             }
         }
@@ -281,6 +283,7 @@ private fun InkArea(
     viewModel: EditorViewModel,
     palmRejection: Boolean,
     pressureSensitivity: Float = 0.65f,
+    lineSpacingDp: Float = 36f,
 ) {
     val paperOrdinal by viewModel.paperStyle.collectAsState()
     val paper = PaperStyle.fromOrdinal(paperOrdinal)
@@ -316,7 +319,11 @@ private fun InkArea(
     }
 
     Box(Modifier.fillMaxSize()) {
-        PaperBackground(style = paper, modifier = Modifier.fillMaxSize())
+        PaperBackground(
+            style = paper,
+            modifier = Modifier.fillMaxSize(),
+            spacingDp = lineSpacingDp,
+        )
         InkCanvas(
             controller = viewModel.ink,
             palmRejection = palmRejection,

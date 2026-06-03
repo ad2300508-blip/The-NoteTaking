@@ -23,13 +23,17 @@ import com.lumina.notes.ui.theme.NoteAccents
 
 /** A faint ruling that gives the ink canvas a tactile "paper" feel. */
 @Composable
-fun PaperBackground(style: PaperStyle, modifier: Modifier = Modifier) {
+fun PaperBackground(
+    style: PaperStyle,
+    modifier: Modifier = Modifier,
+    spacingDp: Float = 36f,
+) {
     val lineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
     val marginColor = Color(0xFFE57373).copy(alpha = 0.5f)
     val surface = MaterialTheme.colorScheme.surface
     Canvas(modifier.background(surface)) {
         if (style == PaperStyle.PLAIN) return@Canvas
-        val step = 36.dp.toPx()
+        val step = spacingDp.dp.toPx()
         when (style) {
             PaperStyle.DOTS -> {
                 val radius = 1.4.dp.toPx()

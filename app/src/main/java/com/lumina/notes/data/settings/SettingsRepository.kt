@@ -20,6 +20,7 @@ data class AppSettings(
     val palmRejection: Boolean = true,
     val fontScale: Float = FontScale.DEFAULT,
     val pressureSensitivity: Float = com.lumina.notes.data.ink.NibWidth.DEFAULT_SENSITIVITY,
+    val lineSpacingDp: Float = 36f,
 )
 
 /** Persisted notes-list view preferences (sort order + filter). */
@@ -49,6 +50,7 @@ class SettingsRepository(private val context: Context) {
         val PEN_COLOR = longPreferencesKey("pen_color")
         val PEN_WIDTH = floatPreferencesKey("pen_width")
         val PRESSURE = floatPreferencesKey("pressure_sensitivity")
+        val LINE_SPACING = floatPreferencesKey("line_spacing_dp")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -59,6 +61,7 @@ class SettingsRepository(private val context: Context) {
             fontScale = FontScale.sanitize(p[Keys.FONT_SCALE] ?: FontScale.DEFAULT),
             pressureSensitivity = (p[Keys.PRESSURE]
                 ?: com.lumina.notes.data.ink.NibWidth.DEFAULT_SENSITIVITY).coerceIn(0f, 1f),
+            lineSpacingDp = (p[Keys.LINE_SPACING] ?: 36f).coerceIn(20f, 64f),
         )
     }
 
@@ -110,4 +113,7 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setPressureSensitivity(value: Float) =
         context.dataStore.edit { it[Keys.PRESSURE] = value.coerceIn(0f, 1f) }.let {}
+
+    suspend fun setLineSpacing(dp: Float) =
+        context.dataStore.edit { it[Keys.LINE_SPACING] = dp.coerceIn(20f, 64f) }.let {}
 }
